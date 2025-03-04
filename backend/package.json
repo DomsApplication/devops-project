@@ -1,0 +1,32 @@
+{
+  "name": "express-basic",
+  "version": "1.0.0",
+  "description": "A basic introduction of Express js.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itshally/express-basic.git"
+  },
+  "keywords": [],
+  "author": "Hally",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/itshally/express-basic/issues"
+  },
+  "homepage": "https://github.com/itshally/express-basic#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.2.0",
+    "resend": "^3.2.0",
+    "zod": "^3.23.5"
+  }
+}
