@@ -1,0 +1,51 @@
+name: mern-app
+
+services:
+  mongo:
+    image: mongo:7.0.12
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - mern-app
+
+  api:
+    build:
+      context: ./backend
+      target: development
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - mern-app
+    depends_on:
+      - mongo
+
+  frontend:
+    build:
+      context: ./frontend
+      target: development
+      args:
+        VITE_API_URL: http://api.auth.localhost:4004
+    env_file:
+      - ./frontend/.env
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - mern-app
+    command: npm run dev -- --host
+    depends_on:
+      - api
+
+volumes:
+  mongo_data:
+  
+networks:
+  mern-app:
+    driver: bridge

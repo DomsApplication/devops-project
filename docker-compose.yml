@@ -1,0 +1,54 @@
+name: mern-app
+
+services:
+  mongo:
+    image: mongo:7.0.12
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - mern-app
+    ports:
+      - "27017:27017"  # Expose MongoDB port for local access
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  api:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      - MONGO_URI=mongodb://root:example@mongo:27017/mern-db?authSource=admin
+    networks:
+      - mern-app
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    networks:
+      - mern-app
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+
+volumes:
+  mongo_data:
+
+networks:
+  mern-app:
+    driver: bridge
