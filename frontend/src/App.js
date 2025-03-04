@@ -6,7 +6,7 @@ function App() {
 
   const callApi = async () => {
     try {
-      const res = await fetch("http://localhost:8000/express/");
+      const res = await fetch("http://localhost:3000/express/");
       const text = await res.text();
       setResponse(text);
     } catch (error) {
