@@ -41,8 +41,8 @@ jobs:
           echo HOST: ${{ secrets.HOST }}
           echo PASSWORD: ${{ secrets.PASSWORD }}
 
-      # This will copies the code base to the remote server
-      - name: CI - Move source to remote server
+      # This will copies the frontend code base to the remote server
+      - name: CI - Move frontend source to remote server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
@@ -53,6 +53,18 @@ jobs:
           source: ./frontend/*
           target: /home/mern/client/
 
+      # This will copies the backend code base to the remote server
+      - name: CI - Move backend source to remote server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOST }}
+          username: root
+          password: ${{ secrets.PASSWORD }}
+          timeout: 600s
+          overwrite: true
+          source: ./backend/*
+          target: /home/mern/server/
+
       # This is for running the commands on the remote server
       - name: CD - application brings up
         uses: appleboy/ssh-action@v1.2.1
@@ -62,7 +74,9 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           script: |
             pwd
+            echo "****************** Frontend *****************"
             cd /home/mern/client/
             ls -al
-
-
+            echo "****************** Backend *****************"
+            cd /home/mern/client/
+            ls -al
