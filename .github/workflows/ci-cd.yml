@@ -36,6 +36,6 @@ jobs:
           host: ${{ secrets.HOST }}
           username: root
           password: ${{ secrets.PASSWORD }}
-          script_path: /scripts/deployment.sh
+          script_path: ./.github/workflows/scripts/deployment.sh
 
 
