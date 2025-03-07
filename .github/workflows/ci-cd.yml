@@ -78,5 +78,5 @@ jobs:
             cd /home/mern/client/
             ls -al
             echo "****************** Backend *****************"
-            cd /home/mern/client/
+            cd /home/mern/server/
             ls -al
