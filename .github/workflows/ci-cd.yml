@@ -36,5 +36,6 @@ jobs:
           host: ${{ secrets.HOST }}
           username: root
           password: ${{ secrets.PASSWORD }}
-          script: whoami
+          script_path: scripts/deployment.sh
+
 
