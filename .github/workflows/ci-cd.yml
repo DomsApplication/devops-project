@@ -48,6 +48,8 @@ jobs:
           host: ${{ secrets.HOST }}
           username: root
           password: ${{ secrets.PASSWORD }}
+          timeout: 600s
+          overwrite: true
           source: ./frontend/*
           target: /home/mern/client/
 
@@ -62,3 +64,5 @@ jobs:
             pwd
             cd /home/mern/client/
             ls -al
+
+
