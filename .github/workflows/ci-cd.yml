@@ -27,6 +27,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: ${{ github.ref_name }}
+
       - name: Debug Information
         run: |
           echo environment: ${{ github.event.inputs.environment || 'default' }}
@@ -40,15 +41,24 @@ jobs:
           echo HOST: ${{ secrets.HOST }}
           echo PASSWORD: ${{ secrets.PASSWORD }}
 
-      # SSH for GitHub Actions: https://github.com/appleboy/ssh-action
-      - name: executing remote ssh commands using password
+      # This will copies the code base to the remote server
+      - name: CI - Move source to remote server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOST }}
+          username: root
+          password: ${{ secrets.PASSWORD }}
+          source: ./frontend/*
+          target: /home/mern/client/
+
+      # This is for running the commands on the remote server
+      - name: CD - application brings up
         uses: appleboy/ssh-action@v1.2.1
         with:
           host: ${{ secrets.HOST }}
           username: root
           password: ${{ secrets.PASSWORD }}
           script: |
-            whoami
+            pwd
+            cd /home/mern/client/
             ls -al
-
-
