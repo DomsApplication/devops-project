@@ -15,7 +15,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     
-     steps:
+    steps:
       - name: Debug Information
         run: |
           echo environment: ${{ github.event.inputs.environment || 'default' }}
