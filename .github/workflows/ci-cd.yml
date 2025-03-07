@@ -13,9 +13,20 @@ permissions:
 
 jobs:
   deploy:
+    name: Build and Deployment
     runs-on: ubuntu-latest
-    
+    environment: ${{ github.event.inputs.environment || 'default' }}
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+      packages: read
+      
     steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref_name }}
       - name: Debug Information
         run: |
           echo environment: ${{ github.event.inputs.environment || 'default' }}
