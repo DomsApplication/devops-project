@@ -95,7 +95,19 @@ jobs:
           fi
           echo "Found Project ID: $PROJECT_ID"
           echo "PROJECT_ID=$PROJECT_ID" >> $GITHUB_ENV
-      
+
+      - name: Create a DigitalOcean Droplet
+        if: env.DROPLET_EXISTS == 'false'
+        run: |
+          doctl compute droplet create ${{ env.DROPLET_NAME }} \
+            --region blr1 \
+            --size s-1vcpu-1gb \
+            --image mern \
+            --ssh-keys "$SSH_KEY_ID" \
+            --project-id "$PROJECT_ID" \
+            --wait --output json
+          echo "**** 2 ***"
+
       - name: Get Droplet Details
         run: |
           echo "Fetching droplet details using droplet name: $DROPLET_NAME"
