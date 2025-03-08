@@ -69,7 +69,7 @@ jobs:
 
       - name: Check if Droplet Exists
         run: |
-          DROPLET_ID=$(doctl compute droplet list --format ID,Name --no-header | grep "$env.DROPLET_NAME" | awk '{print $1}')
+          DROPLET_ID=$(doctl compute droplet list --format ID,Name --no-header | grep "$DROPLET_NAME" | awk '{print $1}')
           echo "DROPLET_ID==========>$DROPLET_ID"
           if [[ -n "$DROPLET_ID" ]]; then
             echo "Droplet already exists with ID: $DROPLET_ID"
