@@ -70,7 +70,7 @@ jobs:
       - name: Check if Droplet Exists
         run: |
           DROPLET_ID=$(doctl compute droplet list --format ID,Name --no-header | grep "$env.DROPLET_NAME" | awk '{print $1}')
-          
+          echo "DROPLET_ID==========>$DROPLET_ID"
           if [[ -n "$DROPLET_ID" ]]; then
             echo "Droplet already exists with ID: $DROPLET_ID"
             echo "DROPLET_EXISTS=true" >> $GITHUB_ENV
@@ -80,11 +80,17 @@ jobs:
             echo "DROPLET_EXISTS=false" >> $GITHUB_ENV
           fi
 
-      - name: Create a DigitalOcean Droplet
+      - name: Get project Id from Project name
         run: |
-          doctl projects list
-          echo "**** 2 ***"
-
+          PROJECT_NAME="first-project"
+          PROJECT_ID=$(doctl projects list --format ID,Name --no-header | awk -v name="$PROJECT_NAME" '$2 == name {print $1}')
+          if [[ -z "$PROJECT_ID" ]]; then
+            echo "❌ Error: Project '$PROJECT_NAME' not found!"
+            exit 1
+          fi
+          echo "Found Project ID: $PROJECT_ID"
+          echo "PROJECT_ID=$PROJECT_ID" >> $GITHUB_ENV
+      
       - name: Get Droplet Details
         run: |
           echo "Fetching droplet details using droplet name: $DROPLET_NAME"
