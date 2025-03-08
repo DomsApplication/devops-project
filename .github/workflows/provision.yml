@@ -146,7 +146,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          echo -n "ABCDEFGHIJ" | gh secret set SAMPLE_SECRET --env default
+          echo -n "ABCDEFGHIJ" | gh secret set SAMPLE_SECRET --env default --repo ${{ github.repository }}
 
       - name: Debug Information of SSH
         run: |
