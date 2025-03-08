@@ -19,10 +19,10 @@ services:
 
   api:
     build:
-      context: ./backend
+      context: ./server
     restart: unless-stopped
     env_file:
-      - ./backend/.env
+      - ./server/.env
     environment:
       - MONGO_URI=mongodb://root:example@mongo:27017/mern-db?authSource=admin
     networks:
@@ -35,7 +35,7 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ./client
     restart: unless-stopped
     networks:
       - mern-app
