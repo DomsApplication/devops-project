@@ -60,7 +60,7 @@ jobs:
           timeout: 600s
           overwrite: true
           source: ./client/
-          target: /home/${{ github.ref_name }}/client
+          target: /home/${{ github.ref_name }}
 
       # This will copies the backend code base to the remote server
       - name: CI - Move backend source to remote server
@@ -72,7 +72,7 @@ jobs:
           timeout: 600s
           overwrite: true
           source: ./server/
-          target: /home/${{ github.ref_name }}/server
+          target: /home/${{ github.ref_name }}
 
       # This is for running the commands on the remote server
       - name: CD - Start React and Express on Remote Server
