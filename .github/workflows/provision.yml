@@ -81,15 +81,8 @@ jobs:
           fi
 
       - name: Create a DigitalOcean Droplet
-        if: env.DROPLET_EXISTS == 'false'
         run: |
-          doctl compute droplet create ${{ env.DROPLET_NAME }} \
-            --region blr1 \
-            --size s-1vcpu-1gb \
-            --image mern \
-            --ssh-keys "$SSH_KEY_ID" \
-            --project-id first-project \
-            --wait 
+          doctl projects list
           echo "**** 2 ***"
 
       - name: Get Droplet Details
