@@ -47,8 +47,23 @@ jobs:
       
       - name: Generate Droplate Unique Name
         run: |
-          DROPLET_NAME_GEN="skmc-app-dev-droplet"
+          DROPLET_NAME_GEN= ${{ github.ref_name }}
           echo "DROPLET_NAME=$DROPLET_NAME_GEN" >> $GITHUB_ENV
+
+      - name: Debug Information
+        run: |
+          echo environment: ${{ github.event.inputs.environment || 'default' }}
+          echo github actor: ${{ github.actor }}
+          echo github actor id: ${{ github.actor_id }}
+          echo branch or tag: ${{ github.ref_type }}
+          echo branch or tag name: ${{ github.ref_name }}
+          echo git_hash: $(git rev-parse --short "$GITHUB_SHA")
+          echo git_branch: ${GITHUB_REF#refs/heads/}
+          echo github.event.pull_request.merged: ${{ github.event.pull_request.merged }}
+          echo DROPLET_NAME: ${{ env.DROPLET_NAME }}
+          echo DROPLET_IP: ${{ env.DROPLET_IP }}
+          echo SSH_KEY_ID: ${{ env.SSH_KEY_ID }}
+          echo PRIVATE_KEY: ${{ env.PRIVATE_KEY }}
 
       - name: Check if Droplet Exists
         run: |
@@ -79,7 +94,7 @@ jobs:
       - name: Store Droplet Info in GitHub Secrets
         if: env.DROPLET_EXISTS == 'false'
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GITHUB_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           echo -n "$PRIVATE_KEY" | gh secret set DROPLET_SSH_PRIVATE_KEY --repo ${{ github.repository }}
           echo -n "$DROPLET_IP" | gh secret set DROPLET_${{ env.DROPLET_NAME }}_IP --repo ${{ github.repository }}
