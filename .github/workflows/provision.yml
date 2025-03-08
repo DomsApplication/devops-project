@@ -1,0 +1,85 @@
+name: Provision environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to run the workflow against'
+        type: environment
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  provision:
+    name: Provision and Deployment
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'default' }}
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+      packages: read
+
+    steps:
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Generate or Use Existing SSH Key
+        run: |
+          if [[ -z "${{ secrets.DROPLET_SSH_PRIVATE_KEY }}" ]]; then
+            ssh-keygen -t rsa -b 4096 -f id_rsa -N ""
+            echo "PRIVATE_KEY<<EOF" >> $GITHUB_ENV
+            echo "$(cat id_rsa)" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+            echo "PUBLIC_KEY=$(cat id_rsa.pub)" >> $GITHUB_ENV
+            doctl compute ssh-key create "github-action-key" --public-key "$PUBLIC_KEY" --output json > ssh_key.json
+            echo "SSH_KEY_ID=$(jq -r '.[0].id' ssh_key.json)" >> $GITHUB_ENV
+          else
+            echo "Using existing SSH key."
+            echo "PRIVATE_KEY=${{ secrets.DROPLET_SSH_PRIVATE_KEY }}" >> $GITHUB_ENV
+            doctl compute ssh-key list --format ID,Name --no-header | grep "github-action-key" | awk '{print $1}' > ssh_key_id.txt
+            echo "SSH_KEY_ID=$(cat ssh_key_id.txt)" >> $GITHUB_ENV
+          fi
+      
+      - name: Generate Droplate Unique Name
+        run: |
+          DROPLET_NAME_GEN="skmc-app-dev-droplet"
+          echo "DROPLET_NAME=$DROPLET_NAME_GEN" >> $GITHUB_ENV
+
+      - name: Check if Droplet Exists
+        run: |
+          DROPLET_ID=$(doctl compute droplet list --format ID,Name --no-header | grep "$env.DROPLET_NAME" | awk '{print $1}')
+          
+          if [[ -n "$DROPLET_ID" ]]; then
+            echo "Droplet already exists with ID: $DROPLET_ID"
+            echo "DROPLET_EXISTS=true" >> $GITHUB_ENV
+            echo "DROPLET_ID=$DROPLET_ID" >> $GITHUB_ENV
+          else
+            echo "Droplet does not exist."
+            echo "DROPLET_EXISTS=false" >> $GITHUB_ENV
+          fi
+
+      - name: Create a DigitalOcean Droplet
+        if: env.DROPLET_EXISTS == 'false'
+        run: |
+          doctl compute droplet create "$env.DROPLET_NAME" \
+            --region blr1 \
+            --size s-1vcpu-1gb \
+            --image mern \
+            --ssh-keys "$SSH_KEY_ID" \
+            --wait --output json > droplet.json
+          echo "DROPLET_NAME=$env.DROPLET_NAME" >> $GITHUB_ENV
+          echo "DROPLET_IP=$(jq -r '.[0].networks.v4[0].ip_address' droplet.json)" >> $GITHUB_ENV
+          echo "Droplet Created with IP: $DROPLET_IP"
+
+      - name: Store Droplet Info in GitHub Secrets
+        if: env.DROPLET_EXISTS == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          echo -n "$PRIVATE_KEY" | gh secret set DROPLET_SSH_PRIVATE_KEY --repo ${{ github.repository }}
+          echo -n "$DROPLET_IP" | gh secret set DROPLET_${{ env.DROPLET_NAME }}_IP --repo ${{ github.repository }}
