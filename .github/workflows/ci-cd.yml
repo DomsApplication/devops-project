@@ -38,24 +38,24 @@ jobs:
           echo git_hash: $(git rev-parse --short "$GITHUB_SHA")
           echo git_branch: ${GITHUB_REF#refs/heads/}
           echo github.event.pull_request.merged: ${{ github.event.pull_request.merged }}
-          echo HOST: ${{ secrets.HOST }}
-          echo PASSWORD: ${{ secrets.PASSWORD }}
+          echo HOST: ${{ secrets.HOST1 }}
+          echo PASSWORD: ${{ secrets.PASSWORD1 }}
 
       - name: Ensure target directory exists on remote server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.HOST }}
+          host: ${{ secrets.HOST1 }}
           username: root
-          password: ${{ secrets.PASSWORD }}
+          password: ${{ secrets.PASSWORD1 }}
           script: mkdir -p /home/${{ github.ref_name }}
 
       # This will copies the frontend code base to the remote server
       - name: CI - Move frontend source to remote server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.HOST }}
+          host: ${{ secrets.HOST1 }}
           username: root
-          password: ${{ secrets.PASSWORD }}
+          password: ${{ secrets.PASSWORD1 }}
           timeout: 600s
           overwrite: true
           source: ./client/
@@ -65,9 +65,9 @@ jobs:
       - name: CI - Move backend source to remote server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.HOST }}
+          host: ${{ secrets.HOST1 }}
           username: root
-          password: ${{ secrets.PASSWORD }}
+          password: ${{ secrets.PASSWORD1 }}
           timeout: 600s
           overwrite: true
           source: ./server/
@@ -77,9 +77,9 @@ jobs:
       - name: CD - Start React and Express on Remote Server
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: ${{ secrets.HOST }}
+          host: ${{ secrets.HOST1 }}
           username: root
-          password: ${{ secrets.PASSWORD }}
+          password: ${{ secrets.PASSWORD1 }}
           script: |
             echo "****************** Updating & Installing Dependencies *****************"
             cd /home/${{ github.ref_name }}/server
