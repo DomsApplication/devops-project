@@ -142,6 +142,12 @@ jobs:
           echo -n "${{ env.PRIVATE_KEY }}" | gh secret set DROPLET_SSH_PRIVATE_KEY --repo ${{ github.repository }}
           echo -n "${{ env.DROPLET_IP }}" | gh secret set DROPLET_IP --repo ${{ github.repository }}
 
+      - name: Testing in GitHub Secrets
+        env:
+          GITHUB_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo -n "ABCDEFGHIJ" | gh secret set SAMPLE_SECRET --env default
+
       - name: Debug Information of SSH
         run: |
           echo DROPLET_IP: ${{ secrets.DROPLET_IP }}
