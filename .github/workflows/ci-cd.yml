@@ -42,12 +42,13 @@ jobs:
           echo PASSWORD: ${{ secrets.PASSWORD1 }}
 
       - name: Ensure target directory exists on remote server
-        uses: appleboy/scp-action@v0.1.7
+        uses: appleboy/ssh-action@v1.2.1
         with:
           host: ${{ secrets.HOST1 }}
           username: root
           password: ${{ secrets.PASSWORD1 }}
-          script: mkdir -p /home/${{ github.ref_name }}
+          script: |
+            mkdir -p /home/${{ github.ref_name }}
 
       # This will copies the frontend code base to the remote server
       - name: CI - Move frontend source to remote server
