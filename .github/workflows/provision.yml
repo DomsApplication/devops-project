@@ -74,7 +74,7 @@ jobs:
           echo DROPLET_NAME: ${{ env.DROPLET_NAME }}
           echo DROPLET_IP: ${{ env.DROPLET_IP }}
           echo SSH_KEY_ID: ${{ env.SSH_KEY_ID }}
-          echo PRIVATE_KEY: ${{ env.PRIVATE_KEY }}
+          echo "PRIVATE_KEY: [HIDDEN]" # To prevent script breaking
 
       - name: Check if Droplet Exists
         run: |
