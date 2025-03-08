@@ -151,7 +151,7 @@ jobs:
         with:
           host: ${{ env.DROPLET_IP }}
           username: root
-          key: ${{ env.PRIVATE_KEY }}
+          key: ${{ secrets.DROPLET_SSH_PRIVATE_KEY }}
           script: |
             echo "Connected successfully!"
             uname -a
