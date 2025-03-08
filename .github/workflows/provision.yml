@@ -32,23 +32,14 @@ jobs:
         run: |
           if [[ -z "${{ secrets.DROPLET_SSH_PRIVATE_KEY }}" ]]; then
             ssh-keygen -t rsa -b 4096 -f id_rsa -N ""
-            echo "**** 1 ***"
             PRIVATE_KEY=$(cat id_rsa)
             PUBLIC_KEY=$(cat id_rsa.pub)
-            echo "**** 2 ***:$PRIVATE_KEY"
-            echo "**** 3 ***:$PUBLIC_KEY"
-            
             echo "PRIVATE_KEY<<EOF" >> $GITHUB_ENV
             echo "$PRIVATE_KEY" >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
-            echo "**** 4 ***"
-            
             echo "PUBLIC_KEY=$PUBLIC_KEY" >> $GITHUB_ENV
-            echo "**** 5 ***"
             doctl compute ssh-key create "github-action-key" --public-key "$PUBLIC_KEY" --output json > ssh_key.json
-            echo "**** 6 ***"
             echo "SSH_KEY_ID=$(jq -r '.[0].id' ssh_key.json)" >> $GITHUB_ENV
-            echo "**** 7 ***"
           else
             echo "Using existing SSH key."
             echo "PRIVATE_KEY=${{ secrets.DROPLET_SSH_PRIVATE_KEY }}" >> $GITHUB_ENV
@@ -92,15 +83,20 @@ jobs:
       - name: Create a DigitalOcean Droplet
         if: env.DROPLET_EXISTS == 'false'
         run: |
+          echo "**** 1 ***:$SSH_KEY_ID"
           doctl compute droplet create "$env.DROPLET_NAME" \
             --region blr1 \
             --size s-1vcpu-1gb \
             --image mern \
             --ssh-keys "$SSH_KEY_ID" \
             --wait --output json > droplet.json
+          echo "**** 2 ***"
           echo "DROPLET_NAME=$env.DROPLET_NAME" >> $GITHUB_ENV
+          echo "**** 3 ***"
           echo "DROPLET_IP=$(jq -r '.[0].networks.v4[0].ip_address' droplet.json)" >> $GITHUB_ENV
+          echo "**** 4 ***"
           echo "Droplet Created with IP: $DROPLET_IP"
+          echo "**** 5 ***"
 
       - name: Store Droplet Info in GitHub Secrets
         if: env.DROPLET_EXISTS == 'false'
