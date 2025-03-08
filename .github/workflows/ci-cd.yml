@@ -74,17 +74,32 @@ jobs:
           target: /home/${{ github.ref_name }}/server
 
       # This is for running the commands on the remote server
-      - name: CD - application brings up
+      - name: CD - Start React and Express on Remote Server
         uses: appleboy/ssh-action@v1.2.1
         with:
           host: ${{ secrets.HOST }}
           username: root
           password: ${{ secrets.PASSWORD }}
           script: |
-            pwd
-            echo "****************** client *****************"
-            cd /home/mern/client/
-            ls -al
-            echo "****************** server *****************"
-            cd /home/mern/server/
-            ls -al
+            echo "****************** Updating & Installing Dependencies *****************"
+            cd /home/${{ github.ref_name }}/server
+            npm install
+            
+            cd /home/${{ github.ref_name }}/client
+            npm install
+            npm run build  # Build React frontend
+            
+            echo "****************** Starting Applications with PM2 *****************"
+            npm install -g pm2  # Ensure pm2 is installed
+            
+            # Start Express backend
+            cd /home/${{ github.ref_name }}/server
+            pm2 start npm --name "backend" -- start
+            
+            # Start React frontend with serve
+            cd /home/${{ github.ref_name }}/client
+            pm2 serve build/ 3000 --name "frontend" --spa
+            
+            # Save PM2 process list to restart on reboot
+            pm2 save
+            pm2 startup
