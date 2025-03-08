@@ -68,7 +68,7 @@ jobs:
           echo github actor id: ${{ github.actor_id }}
           echo branch or tag: ${{ github.ref_type }}
           echo branch or tag name: ${{ github.ref_name }}
-          echo git_hash: $(git rev-parse --short "$GITHUB_SHA")
+          echo "git_hash: $GITHUB_SHA"
           echo git_branch: ${GITHUB_REF#refs/heads/}
           echo github.event.pull_request.merged: ${{ github.event.pull_request.merged }}
           echo DROPLET_NAME: ${{ env.DROPLET_NAME }}
