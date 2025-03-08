@@ -58,7 +58,7 @@ jobs:
       
       - name: Generate Droplate Unique Name
         run: |
-          DROPLET_NAME_GEN= ${{ github.ref_name }}
+          DROPLET_NAME_GEN="${{ github.ref_name }}"
           echo "DROPLET_NAME=$DROPLET_NAME_GEN" >> $GITHUB_ENV
 
       - name: Debug Information
