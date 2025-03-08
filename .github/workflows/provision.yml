@@ -108,6 +108,7 @@ jobs:
           echo "**** 2 ***"
 
       - name: Get Droplet Details
+        if: env.DROPLET_EXISTS == 'false'
         run: |
           echo "Fetching droplet details using droplet name: $DROPLET_NAME"
           DROPLET_INFO=$(doctl compute droplet get ${{ env.DROPLET_NAME }} --format "ID,Name,PublicIPv4" --no-header)
@@ -149,9 +150,11 @@ jobs:
       - name: SSH into Droplet
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: ${{ env.DROPLET_IP }}
+          host: ${{ secrets.DROPLET_IP }}
           username: root
           key: ${{ secrets.DROPLET_SSH_PRIVATE_KEY }}
           script: |
             echo "Connected successfully!"
-            uname -a
+            whoami
+            pwd
+            ls -l
