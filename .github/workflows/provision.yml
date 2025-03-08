@@ -89,31 +89,51 @@ jobs:
             --image mern \
             --ssh-keys "$SSH_KEY_ID" \
             --project-id first-project \
-            --wait \
-            --verbose true \
-            --output json > droplet.json
+            --wait 
           echo "**** 2 ***"
-          echo "DROPLET_NAME=$env.DROPLET_NAME" >> $GITHUB_ENV
-          echo "**** 3 ***"
-          echo "DROPLET_IP=$(jq -r '.[0].networks.v4[0].ip_address' droplet.json)" >> $GITHUB_ENV
-          echo "**** 4 ***"
-          echo "Droplet Created with IP: $DROPLET_IP"
-          echo "**** 5 ***"
 
+      - name: Get Droplet Details
+        run: |
+          echo "Fetching droplet details using droplet name: $DROPLET_NAME"
+          DROPLET_INFO=$(doctl compute droplet get ${{ env.DROPLET_NAME }} --format "ID,Name,PublicIPv4" --no-header)
+          
+          # Extract ID and Public IP
+          DROPLET_ID=$(echo "$DROPLET_INFO" | awk '{print $1}')
+          DROPLET_IP=$(echo "$DROPLET_INFO" | awk '{print $3}')
+          
+          # Validate extracted values
+          if [ -z "$DROPLET_ID" ] || [ -z "$DROPLET_IP" ]; then
+            echo "Error: Failed to retrieve droplet details."
+            exit 1
+          fi
+
+          # Store values in GitHub Actions environment
+          echo "DROPLET_ID=$DROPLET_ID" >> $GITHUB_ENV
+          echo "DROPLET_IP=$DROPLET_IP" >> $GITHUB_ENV
+      
+          # Print retrieved details
+          echo "✅ Droplet Name: $DROPLET_NAME"
+          echo "✅ Droplet ID: $DROPLET_ID"
+          echo "✅ Droplet Public IP: $DROPLET_IP"
+          
       - name: Store Droplet Info in GitHub Secrets
         if: env.DROPLET_EXISTS == 'false'
         env:
           GITHUB_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          echo -n "$PRIVATE_KEY" | gh secret set DROPLET_SSH_PRIVATE_KEY --repo ${{ github.repository }}
-          echo -n "$DROPLET_IP" | gh secret set DROPLET_${{ env.DROPLET_NAME }}_IP --repo ${{ github.repository }}
+          echo "Fetching droplet IP: ${{ env.DROPLET_IP }}"
+          echo "Fetching Private Key: ${{ env.PRIVATE_KEY }}"
+          echo -n "${{ env.PRIVATE_KEY }}" | gh secret set DROPLET_SSH_PRIVATE_KEY --repo ${{ github.repository }}
+          echo -n "${{ env.DROPLET_IP }}" | gh secret set DROPLET_IP --repo ${{ github.repository }}
 
       - name: SSH into Droplet
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: ${{ env.DROPLET_IP }}
+          echo "Fetching droplet IP: ${{ secrets.DROPLET_IP }}"
+          echo "Fetching droplet Private Key: ${{ secrets.DROPLET_SSH_PRIVATE_KEY }}"
+          host: ${{ secrets.DROPLET_IP }}
           username: root
-          key: ${{ env.PRIVATE_KEY }}
+          key: ${{ secrets.DROPLET_SSH_PRIVATE_KEY }}
           script: |
             echo "Connected successfully!"
             uname -a
