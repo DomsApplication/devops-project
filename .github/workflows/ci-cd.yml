@@ -38,45 +38,69 @@ jobs:
           echo git_hash: $(git rev-parse --short "$GITHUB_SHA")
           echo git_branch: ${GITHUB_REF#refs/heads/}
           echo github.event.pull_request.merged: ${{ github.event.pull_request.merged }}
-          echo HOST: ${{ secrets.HOST }}
-          echo PASSWORD: ${{ secrets.PASSWORD }}
+          echo HOST: ${{ secrets.HOST1 }}
+          echo PASSWORD: ${{ secrets.PASSWORD1 }}
+
+      - name: Ensure target directory exists on remote server
+        uses: appleboy/ssh-action@v1.2.1
+        with:
+          host: ${{ secrets.HOST1 }}
+          username: root
+          password: ${{ secrets.PASSWORD1 }}
+          script: |
+            mkdir -p /home/${{ github.ref_name }}
 
       # This will copies the frontend code base to the remote server
       - name: CI - Move frontend source to remote server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.HOST }}
+          host: ${{ secrets.HOST1 }}
           username: root
-          password: ${{ secrets.PASSWORD }}
+          password: ${{ secrets.PASSWORD1 }}
           timeout: 600s
           overwrite: true
-          source: ./frontend/*
-          target: /home/mern/client/
+          source: ./client/
+          target: /home/${{ github.ref_name }}
 
       # This will copies the backend code base to the remote server
       - name: CI - Move backend source to remote server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.HOST }}
+          host: ${{ secrets.HOST1 }}
           username: root
-          password: ${{ secrets.PASSWORD }}
+          password: ${{ secrets.PASSWORD1 }}
           timeout: 600s
           overwrite: true
-          source: ./backend/*
-          target: /home/mern/server/
+          source: ./server/
+          target: /home/${{ github.ref_name }}
 
       # This is for running the commands on the remote server
-      - name: CD - application brings up
+      - name: CD - Start React and Express on Remote Server
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: ${{ secrets.HOST }}
+          host: ${{ secrets.HOST1 }}
           username: root
-          password: ${{ secrets.PASSWORD }}
+          password: ${{ secrets.PASSWORD1 }}
           script: |
-            pwd
-            echo "****************** Frontend *****************"
-            cd /home/mern/client/
-            ls -al
-            echo "****************** Backend *****************"
-            cd /home/mern/server/
-            ls -al
+            echo "****************** Updating & Installing Dependencies *****************"
+            cd /home/${{ github.ref_name }}/server
+            npm install
+            
+            cd /home/${{ github.ref_name }}/client
+            npm install
+            npm run build  # Build React frontend
+            
+            echo "****************** Starting Applications with PM2 *****************"
+            npm install -g pm2  # Ensure pm2 is installed
+            
+            # Start Express backend on port 5000
+            cd /home/${{ github.ref_name }}/server
+            PORT=5000 pm2 start npm --name "backend" -- start
+            
+            # Start React frontend with serve on port 3000
+            cd /home/${{ github.ref_name }}/client
+            pm2 serve build/ 3000 --name "frontend" --spa
+            
+            # Save PM2 process list to restart on reboot
+            pm2 save
+            pm2 startup

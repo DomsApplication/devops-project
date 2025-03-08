@@ -12,13 +12,13 @@ services:
 
   api:
     build:
-      context: ./backend
+      context: ./server
       target: development
     restart: unless-stopped
     env_file:
-      - ./backend/.env
+      - ./server/.env
     volumes:
-      - ./backend:/app
+      - ./server:/app
       - /app/node_modules
     networks:
       - mern-app
