@@ -33,13 +33,17 @@ jobs:
           if [[ -z "${{ secrets.DROPLET_SSH_PRIVATE_KEY }}" ]]; then
             ssh-keygen -t rsa -b 4096 -f id_rsa -N ""
             echo "**** 1 ***"
+            PRIVATE_KEY=$(cat id_rsa)
+            PUBLIC_KEY=$(cat id_rsa.pub)
+            echo "**** 2 ***:$PRIVATE_KEY"
+            echo "**** 3 ***:$PUBLIC_KEY"
+            
             echo "PRIVATE_KEY<<EOF" >> $GITHUB_ENV
-            echo "**** 2 ***"
-            echo "$(cat id_rsa)" >> $GITHUB_ENV
-            echo "**** 3 ***"
+            echo "$PRIVATE_KEY" >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
             echo "**** 4 ***"
-            echo "PUBLIC_KEY=$(cat id_rsa.pub)" >> $GITHUB_ENV
+            
+            echo "PUBLIC_KEY=$PUBLIC_KEY" >> $GITHUB_ENV
             echo "**** 5 ***"
             doctl compute ssh-key create "github-action-key" --public-key "$PUBLIC_KEY" --output json > ssh_key.json
             echo "**** 6 ***"
