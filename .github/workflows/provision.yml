@@ -105,7 +105,7 @@ jobs:
             --image mern \
             --ssh-keys "$SSH_KEY_ID" \
             --project-id "$PROJECT_ID" \
-            --wait --output json
+            --wait
           echo "**** 2 ***"
 
       - name: Get Droplet Details
