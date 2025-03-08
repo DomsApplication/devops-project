@@ -42,8 +42,6 @@ jobs:
             echo "SSH_KEY_ID=$(jq -r '.[0].id' ssh_key.json)" >> $GITHUB_ENV
           else
             echo "Using existing SSH key."
-            echo "PRIVATE_KEY=${{ secrets.DROPLET_SSH_PRIVATE_KEY }}" >> $GITHUB_ENV
-            echo "*** 1 ***$PRIVATE_KEY"
             SSH_KEY_ID=$(doctl compute ssh-key list --format ID,Name --no-header | grep "github-action-key" | awk '{print $1}')
             echo "*** 2 ***$SSH_KEY_ID"
             if [[ -z "$SSH_KEY_ID" ]]; then
