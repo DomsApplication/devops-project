@@ -77,9 +77,19 @@ jobs:
           echo "Droplet Created with IP: $DROPLET_IP"
 
       - name: Store Droplet Info in GitHub Secrets
-        if: env.DROPLET_EXISTS == 'true'
+        if: env.DROPLET_EXISTS == 'false'
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           echo -n "$PRIVATE_KEY" | gh secret set DROPLET_SSH_PRIVATE_KEY --repo ${{ github.repository }}
           echo -n "$DROPLET_IP" | gh secret set DROPLET_${{ env.DROPLET_NAME }}_IP --repo ${{ github.repository }}
+
+      - name: SSH into Droplet
+        uses: appleboy/ssh-action@v1.2.1
+        with:
+          host: ${{ env.DROPLET_IP }}
+          username: root
+          key: ${{ env.PRIVATE_KEY }}
+          script: |
+            echo "Connected successfully!"
+            uname -a
