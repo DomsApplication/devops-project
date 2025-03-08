@@ -54,6 +54,7 @@ jobs:
           if [[ -n "$DROPLET_ID" ]]; then
             echo "✅ Droplet already exists with ID: $DROPLET_ID"
             echo "DROPLET_EXISTS=true" >> $GITHUB_ENV
+            echo "DROPLET_ID=$DROPLET_ID" >> $GITHUB_ENV
           else
             echo "❌ Droplet does not exist."
             echo "DROPLET_EXISTS=false" >> $GITHUB_ENV
