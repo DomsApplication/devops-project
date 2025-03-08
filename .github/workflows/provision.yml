@@ -43,13 +43,14 @@ jobs:
           else
             echo "Using existing SSH key."
             echo "PRIVATE_KEY=${{ secrets.DROPLET_SSH_PRIVATE_KEY }}" >> $GITHUB_ENV
-            echo "*** 1 ***"
+            echo "*** 1 ***$PRIVATE_KEY"
             SSH_KEY_ID=$(doctl compute ssh-key list --format ID,Name --no-header | grep "github-action-key" | awk '{print $1}')
+            echo "*** 2 ***$SSH_KEY_ID"
             if [[ -z "$SSH_KEY_ID" ]]; then
               echo "❌ Error: SSH key 'github-action-key' not found!"
               exit 1
             fi
-            echo "*** 2 ***"
+            echo "*** 3 ***"
             echo "SSH_KEY_ID=$SSH_KEY_ID" >> $GITHUB_ENV
             echo "*** 3 ***"
           fi
