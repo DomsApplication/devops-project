@@ -117,7 +117,6 @@ jobs:
           echo "✅ Droplet Public IP: $DROPLET_IP"
           
       - name: Store Droplet Info in GitHub Secrets
-        if: env.DROPLET_EXISTS == 'false'
         env:
           GITHUB_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
