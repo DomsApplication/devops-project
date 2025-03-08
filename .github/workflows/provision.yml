@@ -138,8 +138,8 @@ jobs:
         run: |
           echo "Fetching droplet IP: ${{ env.DROPLET_IP }}"
           echo "Fetching Private Key: ${{ env.PRIVATE_KEY }}"
-          echo -n "${{ env.PRIVATE_KEY }}" | gh secret set DROPLET_SSH_PRIVATE_KEY --env ${{ github.event.inputs.environment || 'default' }}
-          echo -n "${{ env.DROPLET_IP }}" | gh secret set DROPLET_IP --env ${{ github.event.inputs.environment || 'default' }}
+          echo -n "${{ env.PRIVATE_KEY }}" | gh secret set DROPLET_SSH_PRIVATE_KEY --repo ${{ github.repository }}
+          echo -n "${{ env.DROPLET_IP }}" | gh secret set DROPLET_IP --repo ${{ github.repository }}
 
       - name: Debug Information of SSH
         run: |
