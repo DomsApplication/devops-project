@@ -32,22 +32,30 @@ jobs:
         run: |
           if [[ -z "${{ secrets.DROPLET_SSH_PRIVATE_KEY }}" ]]; then
             ssh-keygen -t rsa -b 4096 -f id_rsa -N ""
+            PRIVATE_KEY=$(cat id_rsa)
+            PUBLIC_KEY=$(cat id_rsa.pub)
             echo "PRIVATE_KEY<<EOF" >> $GITHUB_ENV
-            echo "$(cat id_rsa)" >> $GITHUB_ENV
+            echo "$PRIVATE_KEY" >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
-            echo "PUBLIC_KEY=$(cat id_rsa.pub)" >> $GITHUB_ENV
+            echo "PUBLIC_KEY=$PUBLIC_KEY" >> $GITHUB_ENV
             doctl compute ssh-key create "github-action-key" --public-key "$PUBLIC_KEY" --output json > ssh_key.json
             echo "SSH_KEY_ID=$(jq -r '.[0].id' ssh_key.json)" >> $GITHUB_ENV
           else
             echo "Using existing SSH key."
-            echo "PRIVATE_KEY=${{ secrets.DROPLET_SSH_PRIVATE_KEY }}" >> $GITHUB_ENV
-            doctl compute ssh-key list --format ID,Name --no-header | grep "github-action-key" | awk '{print $1}' > ssh_key_id.txt
-            echo "SSH_KEY_ID=$(cat ssh_key_id.txt)" >> $GITHUB_ENV
+            SSH_KEY_ID=$(doctl compute ssh-key list --format ID,Name --no-header | grep "github-action-key" | awk '{print $1}')
+            echo "*** 2 ***$SSH_KEY_ID"
+            if [[ -z "$SSH_KEY_ID" ]]; then
+              echo "❌ Error: SSH key 'github-action-key' not found!"
+              exit 1
+            fi
+            echo "*** 3 ***"
+            echo "SSH_KEY_ID=$SSH_KEY_ID" >> $GITHUB_ENV
+            echo "*** 3 ***"
           fi
       
       - name: Generate Droplate Unique Name
         run: |
-          DROPLET_NAME_GEN= ${{ github.ref_name }}
+          DROPLET_NAME_GEN="${{ github.ref_name }}"
           echo "DROPLET_NAME=$DROPLET_NAME_GEN" >> $GITHUB_ENV
 
       - name: Debug Information
@@ -57,18 +65,16 @@ jobs:
           echo github actor id: ${{ github.actor_id }}
           echo branch or tag: ${{ github.ref_type }}
           echo branch or tag name: ${{ github.ref_name }}
-          echo git_hash: $(git rev-parse --short "$GITHUB_SHA")
+          echo "git_hash: $GITHUB_SHA"
           echo git_branch: ${GITHUB_REF#refs/heads/}
           echo github.event.pull_request.merged: ${{ github.event.pull_request.merged }}
           echo DROPLET_NAME: ${{ env.DROPLET_NAME }}
           echo DROPLET_IP: ${{ env.DROPLET_IP }}
           echo SSH_KEY_ID: ${{ env.SSH_KEY_ID }}
-          echo PRIVATE_KEY: ${{ env.PRIVATE_KEY }}
 
       - name: Check if Droplet Exists
         run: |
-          DROPLET_ID=$(doctl compute droplet list --format ID,Name --no-header | grep "$env.DROPLET_NAME" | awk '{print $1}')
-          
+          DROPLET_ID=$(doctl compute droplet list --format ID,Name --no-header | grep "$DROPLET_NAME" | awk '{print $1}')
           if [[ -n "$DROPLET_ID" ]]; then
             echo "Droplet already exists with ID: $DROPLET_ID"
             echo "DROPLET_EXISTS=true" >> $GITHUB_ENV
@@ -78,33 +84,83 @@ jobs:
             echo "DROPLET_EXISTS=false" >> $GITHUB_ENV
           fi
 
+      - name: Get project Id from Project name
+        run: |
+          PROJECT_NAME="first-project"
+          PROJECT_ID=$(doctl projects list --format ID,Name --no-header | awk -v name="$PROJECT_NAME" '$2 == name {print $1}')
+          if [[ -z "$PROJECT_ID" ]]; then
+            echo "❌ Error: Project '$PROJECT_NAME' not found!"
+            exit 1
+          fi
+          echo "Found Project ID: $PROJECT_ID"
+          echo "PROJECT_ID=$PROJECT_ID" >> $GITHUB_ENV
+
       - name: Create a DigitalOcean Droplet
         if: env.DROPLET_EXISTS == 'false'
         run: |
-          doctl compute droplet create "$env.DROPLET_NAME" \
+          doctl compute droplet create ${{ env.DROPLET_NAME }} \
             --region blr1 \
             --size s-1vcpu-1gb \
             --image mern \
             --ssh-keys "$SSH_KEY_ID" \
-            --wait --output json > droplet.json
-          echo "DROPLET_NAME=$env.DROPLET_NAME" >> $GITHUB_ENV
-          echo "DROPLET_IP=$(jq -r '.[0].networks.v4[0].ip_address' droplet.json)" >> $GITHUB_ENV
-          echo "Droplet Created with IP: $DROPLET_IP"
+            --project-id "$PROJECT_ID" \
+            --wait
+          echo "**** 2 ***"
 
+      - name: Get Droplet Details
+        if: env.DROPLET_EXISTS == 'false'
+        run: |
+          echo "Fetching droplet details using droplet name: $DROPLET_NAME"
+          DROPLET_INFO=$(doctl compute droplet get ${{ env.DROPLET_NAME }} --format "ID,Name,PublicIPv4" --no-header)
+          
+          # Extract ID and Public IP
+          DROPLET_ID=$(echo "$DROPLET_INFO" | awk '{print $1}')
+          DROPLET_IP=$(echo "$DROPLET_INFO" | awk '{print $3}')
+          
+          # Validate extracted values
+          if [ -z "$DROPLET_ID" ] || [ -z "$DROPLET_IP" ]; then
+            echo "Error: Failed to retrieve droplet details."
+            exit 1
+          fi
+
+          # Store values in GitHub Actions environment
+          echo "DROPLET_ID=$DROPLET_ID" >> $GITHUB_ENV
+          echo "DROPLET_IP=$DROPLET_IP" >> $GITHUB_ENV
+      
+          # Print retrieved details
+          echo "✅ Droplet Name: $DROPLET_NAME"
+          echo "✅ Droplet ID: $DROPLET_ID"
+          echo "✅ Droplet Public IP: $DROPLET_IP"
+          
       - name: Store Droplet Info in GitHub Secrets
         if: env.DROPLET_EXISTS == 'false'
         env:
           GITHUB_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          echo -n "$PRIVATE_KEY" | gh secret set DROPLET_SSH_PRIVATE_KEY --repo ${{ github.repository }}
-          echo -n "$DROPLET_IP" | gh secret set DROPLET_${{ env.DROPLET_NAME }}_IP --repo ${{ github.repository }}
+          echo "Fetching droplet IP: ${{ env.DROPLET_IP }}"
+          echo "Fetching Private Key: ${{ env.PRIVATE_KEY }}"
+          echo -n "${{ env.PRIVATE_KEY }}" | gh secret set DROPLET_SSH_PRIVATE_KEY --repo ${{ github.repository }}
+          echo -n "${{ env.DROPLET_IP }}" | gh secret set DROPLET_IP --repo ${{ github.repository }}
+
+      - name: Testing in GitHub Secrets
+        env:
+          GITHUB_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo -n "ABCDEFGHIJ" | gh secret set SAMPLE_SECRET --env default --repo ${{ github.repository }}
+
+      - name: Debug Information of SSH
+        run: |
+          echo DROPLET_IP: ${{ secrets.DROPLET_IP }}
+          echo DROPLET_IP/1: ${{ env.DROPLET_IP }}
 
       - name: SSH into Droplet
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: ${{ env.DROPLET_IP }}
+          host: ${{ secrets.DROPLET_IP }}
           username: root
-          key: ${{ env.PRIVATE_KEY }}
+          key: ${{ secrets.DROPLET_SSH_PRIVATE_KEY }}
           script: |
             echo "Connected successfully!"
-            uname -a
+            whoami
+            pwd
+            ls -l
