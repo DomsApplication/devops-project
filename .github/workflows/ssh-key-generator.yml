@@ -38,10 +38,10 @@ jobs:
           SSH_KEY_ID=$(doctl compute ssh-key list --format ID,Name --no-header | grep ${{ inputs.ssh-key-name }} | awk '{print $1}')
           echo "SSH_KEY_ID=$SSH_KEY_ID" >> $GITHUB_ENV
           if [[ -n "$SSH_KEY_ID" ]]; then
-            echo "SSH-KEY is already exists: ${{ inputs.ssh-key-name }}"
+            echo "✅ SSH-KEY is already exists: ${{ inputs.ssh-key-name }}"
             echo "SSH_KEY_EXISTS=true" >> $GITHUB_ENV
           else
-            echo "SSH-KEY is not exists: ${{ inputs.ssh-key-name }}"
+            echo "❌ SSH-KEY is not exists: ${{ inputs.ssh-key-name }}"
             echo "SSH_KEY_EXISTS=false" >> $GITHUB_ENV
           fi
 
@@ -66,12 +66,12 @@ jobs:
           echo ssh_key_name: ${{ inputs.ssh-key-name }}
           echo SSH_KEY_ID: ${{ env.SSH_KEY_ID }}
 
-      - name: Store Droplet Info in GitHub Secrets
+      - name: Set environment in GitHub Secrets
         if: env.SSH_KEY_EXISTS == 'false'
         env:
           GITHUB_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           echo "Fetching droplet IP: ${{ env.SSH_KEY_ID }}"
-          echo -n "${{ env.PRIVATE_KEY }}" | gh secret set DROPLET_SSH_PRIVATE_KEY --repo ${{ github.repository }}
+          echo -n "${{ env.PRIVATE_KEY }}" | gh secret set SSH_PRIVATE_KEY --repo ${{ github.repository }}
           echo -n "${{ env.SSH_KEY_ID }}" | gh secret set SSH_KEY_ID --repo ${{ github.repository }}
 
