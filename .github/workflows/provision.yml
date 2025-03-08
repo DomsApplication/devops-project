@@ -83,14 +83,15 @@ jobs:
       - name: Create a DigitalOcean Droplet
         if: env.DROPLET_EXISTS == 'false'
         run: |
-          echo "**** 1 ***:$SSH_KEY_ID"
           doctl compute droplet create ${{ env.DROPLET_NAME }} \
             --region blr1 \
             --size s-1vcpu-1gb \
             --image mern \
             --ssh-keys "$SSH_KEY_ID" \
             --project-id first-project \
-            --wait --output json > droplet.json
+            --wait \
+            --verbose true \
+            --output json > droplet.json
           echo "**** 2 ***"
           echo "DROPLET_NAME=$env.DROPLET_NAME" >> $GITHUB_ENV
           echo "**** 3 ***"
