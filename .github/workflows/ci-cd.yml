@@ -99,7 +99,7 @@ jobs:
             
             # Start React frontend with serve on port 3000
             cd /home/${{ github.ref_name }}/client
-            pm2 serve build/ 3000 --name "frontend" --spa
+            pm2 serve build/ 3100 --name "frontend" --spa
             
             # Save PM2 process list to restart on reboot
             pm2 save
