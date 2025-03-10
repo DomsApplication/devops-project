@@ -81,6 +81,7 @@ jobs:
           host: ${{ secrets.HOST1 }}
           username: root
           password: ${{ secrets.PASSWORD1 }}
+          timeout: 900s
           script: |
             echo "****************** Checking PM2 Running Processes *****************"
 
