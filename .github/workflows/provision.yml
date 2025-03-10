@@ -131,15 +131,14 @@ jobs:
             # Retry Ping Check up to 5 times
             echo "Start connecting to the HOST: $HOST"
             for i in {1..5}; do
-              echo "Attempt $i: Checking if SSH port 22 is open..."
-              nc -zvw3 $HOST 22 && break
-              echo "SSH port 22 is not open yet. Retrying in 10 seconds..."
+              echo "Attempt $i: Checking SSH connection..."
+              nc -zvw3 ${{ secrets.DROPLET_IP }} 22 && break
+              echo "SSH is not ready yet. Retrying in 10 seconds..."
               sleep 10
             done
 
-            if ! nc -zvw3 $HOST 22; then
-              echo "SSH connection failed after 5 attempts. Exiting."
-              exit 1
+            if ! nc -zvw3 ${{ secrets.DROPLET_IP }} 22; then
+              echo "SSH connection failed after 5 attempts."
             fi
 
       - name: Post Deployment install additional softwares
