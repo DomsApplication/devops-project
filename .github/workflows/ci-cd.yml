@@ -97,11 +97,11 @@ jobs:
             
             # Start Express backend on port 5000
             cd /home/${{ github.ref_name }}/server
-            PORT=5000 pm2 start npm --name "backend" -- start
+            PORT=4100 pm2 start npm --name "backend" -- start
             
             # Start React frontend with serve on port 3000
             cd /home/${{ github.ref_name }}/client
-            pm2 serve build/ 3000 --name "frontend" --spa
+            pm2 serve build/ 3100 --name "frontend" --spa
             
             # Save PM2 process list to restart on reboot
             pm2 save

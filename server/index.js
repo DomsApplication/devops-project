@@ -1,17 +1,11 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI;
 
-mongoose.connect(MONGO_URI)
-  .then(() => console.log('✅ MongoDB Connected'))
-  .catch(err => console.error('❌ MongoDB Connection Error:', err));
-
-const allowedOrigins = ['http://localhost:80', 'http://139.59.46.155'];
+const allowedOrigins = ['http://localhost:80', 'http://165.232.190.41:3100'];
 
 // CORS configuration
 const corsOptions = {
