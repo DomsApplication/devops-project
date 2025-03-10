@@ -38,16 +38,15 @@ jobs:
           echo git_hash: $(git rev-parse --short "$GITHUB_SHA")
           echo git_branch: ${GITHUB_REF#refs/heads/}
           echo github.event.pull_request.merged: ${{ github.event.pull_request.merged }}
-          echo DROPLET_IP: ${{ secrets.DROPLET_IP }}
+          echo HOST: ${{ secrets.HOST1 }}
+          echo PASSWORD: ${{ secrets.PASSWORD1 }}
 
-      # Create a host folder under /home
       - name: Ensure target directory exists on remote server
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: ${{ secrets.DROPLET_IP }}
+          host: ${{ secrets.HOST1 }}
           username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          timeout: 600s
+          password: ${{ secrets.PASSWORD1 }}
           script: |
             mkdir -p /home/${{ github.ref_name }}
 
@@ -55,9 +54,9 @@ jobs:
       - name: CI - Move frontend source to remote server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.DROPLET_IP }}
+          host: ${{ secrets.HOST1 }}
           username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          password: ${{ secrets.PASSWORD1 }}
           timeout: 600s
           overwrite: true
           source: ./client/
@@ -67,9 +66,9 @@ jobs:
       - name: CI - Move backend source to remote server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.DROPLET_IP }}
+          host: ${{ secrets.HOST1 }}
           username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          password: ${{ secrets.PASSWORD1 }}
           timeout: 600s
           overwrite: true
           source: ./server/
@@ -79,10 +78,9 @@ jobs:
       - name: CD - Start React and Express on Remote Server
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: ${{ secrets.DROPLET_IP }}
+          host: ${{ secrets.HOST1 }}
           username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          timeout: 600s
+          password: ${{ secrets.PASSWORD1 }}
           script: |
             echo "****************** Updating & Installing Dependencies *****************"
             cd /home/${{ github.ref_name }}/server
