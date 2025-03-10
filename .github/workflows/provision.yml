@@ -144,7 +144,7 @@ jobs:
 
             echo "Connected successfully!................"
 
-      - name: Conenct to Droplet SSH base
+      - name: Post Deployment install additional softwares
         uses: appleboy/ssh-action@v1.2.1
         with:
           host: ${{ secrets.DROPLET_IP }}
