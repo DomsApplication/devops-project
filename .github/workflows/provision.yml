@@ -164,10 +164,10 @@ jobs:
             echo "=============> Installing essential packages"
             sudo apt-get install -yq gnupg curl git unzip
 
-            echo "=============> Installing Node.js 18 & Latest npm"
+            echo "=============> Installing Node.js 20 & Latest npm"
             sudo apt-get remove -y nodejs npm libnode-dev || true
             sudo apt-get autoremove -y
-            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
             sudo apt-get install -y nodejs
             sudo npm install -g npm@latest
 
