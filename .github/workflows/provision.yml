@@ -124,23 +124,19 @@ jobs:
         run: |
           echo DROPLET_IP: ${{ secrets.DROPLET_IP }}
 
-      - name: Ping to the server via SSH
-        env:
-          HOST: ${{ secrets.DROPLET_IP }}
-        run: |
-            # Retry Ping Check up to 5 times
-            echo "Start connecting to the HOST: $HOST"
-            for i in {1..5}; do
-              echo "Attempt $i: Checking SSH connection..."
-              nc -zvw3 ${{ secrets.DROPLET_IP }} 22 && break
-              echo "SSH is not ready yet. Retrying in 10 seconds..."
-              sleep 10
-            done
 
-            if ! nc -zvw3 ${{ secrets.DROPLET_IP }} 22; then
-              echo "SSH connection failed after 5 attempts."
-            fi
+  post-deployment:
+    name: post deployment
+    needs: provision
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'default' }}
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+      packages: read
 
+    steps:
       - name: Post Deployment install additional softwares
         uses: appleboy/ssh-action@v1.2.1
         with:
@@ -159,8 +155,10 @@ jobs:
             sudo rm -rf /var/lib/apt/lists/lock /var/lib/dpkg/lock /var/lib/dpkg/lock-frontend
 
             echo "=============> Updating package lists"
-            export DEBIAN_FRONTEND=noninteractive
-            sudo apt-get update -yq && sudo apt-get upgrade -yq --allow-downgrades
+            sudo apt-get update -yq
+
+            echo "=============> Upgrading packages (avoid SSH prompt issue)"
+            sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confold" upgrade -yq --allow-downgrades
 
             echo "=============> Installing essential packages"
             sudo apt-get install -yq gnupg curl git unzip
