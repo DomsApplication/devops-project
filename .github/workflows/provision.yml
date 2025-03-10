@@ -159,11 +159,13 @@ jobs:
             sudo rm -rf /var/lib/apt/lists/lock /var/lib/dpkg/lock /var/lib/dpkg/lock-frontend
 
             echo "=============> Updating package lists"
+            export DEBIAN_FRONTEND=noninteractive
             sudo apt-get update -yq && sudo apt-get upgrade -yq --allow-downgrades
 
             echo "=============> Installing essential packages"
             sudo apt-get install -yq gnupg curl git unzip
-
+            export DEBIAN_FRONTEND=noninteractive
+            
             echo "=============> Installing Node.js 20 & Latest npm"
             sudo apt-get remove -y nodejs npm libnode-dev || true
             sudo apt-get autoremove -y
