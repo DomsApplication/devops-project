@@ -82,7 +82,7 @@ jobs:
           doctl compute droplet create ${{ env.DROPLET_NAME }} \
             --region blr1 \
             --size s-1vcpu-1gb \
-            --image mern \
+            --image ubuntu-22-04-x64 \
             --ssh-keys ${{ secrets.SSH_KEY_ID }} \
             --project-id "$PROJECT_ID" \
             --wait
