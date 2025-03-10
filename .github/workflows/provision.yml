@@ -151,28 +151,27 @@ jobs:
           timeout: 900s
           script: |
             echo "Connected successfully!................"
+
             echo "=============> Set non-interactive mode to prevent prompts."
             export DEBIAN_FRONTEND=noninteractive
 
-            echo "=============> Kill any running apt processes (fixes 'Could not get lock' error)"
+            echo "=============> Killing any running apt processes"
             sudo killall apt apt-get || true
             sudo rm -rf /var/lib/apt/lists/lock /var/lib/dpkg/lock /var/lib/dpkg/lock-frontend
 
-            echo "=============> Update package list and upgrade (without interactive prompts)"
-            apt-get update -yq && apt-get upgrade -yq --allow-downgrades
+            echo "=============> Updating package lists"
+            sudo apt-get update -yq && sudo apt-get upgrade -yq --allow-downgrades
 
-            echo "=============> Install Node.js, npm, and git"
-            apt-get install -yq gnupg curl npm
+            echo "=============> Installing essential packages"
+            sudo apt-get install -yq gnupg curl git unzip
 
-            echo "=============> Add NodeSource repository for Node.js 18"
+            echo "=============> Installing Node.js 18 & Latest npm"
+            sudo apt-get remove -y nodejs npm libnode-dev || true
+            sudo apt-get autoremove -y
             curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-
-            echo "=============> Install Node.js 18 and npm"
             sudo apt-get install -y nodejs
-
-            echo "=============> Update npm to the latest version"
             sudo npm install -g npm@latest
-       
+
             echo "=============> Verify Installation"
             node -v
             npm -v
