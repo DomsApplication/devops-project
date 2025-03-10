@@ -125,7 +125,7 @@ jobs:
           echo DROPLET_IP: ${{ secrets.DROPLET_IP }}
 
       - name: Conenct to Droplet SSH base
-        uses: appleboy/ssh-action@v1.2.1
+        uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.DROPLET_IP }}
           username: root

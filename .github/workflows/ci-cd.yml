@@ -42,7 +42,7 @@ jobs:
           echo PASSWORD: ${{ secrets.PASSWORD1 }}
 
       - name: Ensure target directory exists on remote server
-        uses: appleboy/ssh-action@v1.2.1
+        uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.HOST1 }}
           username: root
@@ -76,7 +76,7 @@ jobs:
 
       # This is for running the commands on the remote server
       - name: CD - Start React and Express on Remote Server
-        uses: appleboy/ssh-action@v1.2.1
+        uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.HOST1 }}
           username: root
