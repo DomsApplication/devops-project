@@ -126,22 +126,25 @@ jobs:
 
       - name: Conenct to Droplet SSH base
         uses: appleboy/ssh-action@v1.2.1
+        env:
+          HOST: ${{ secrets.DROPLET_IP }}
         with:
           host: ${{ secrets.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 900s
           script: |
-            # Retry SSH connection up to 5 times
+            # Retry Ping Check up to 5 times
+            echo "Start connecting to the HOST: $HOST"
             for i in {1..5}; do
-              echo "Attempt $i: Checking SSH connection..."
-              nc -zvw3 ${{ secrets.DROPLET_IP }} 22 && break
-              echo "SSH is not ready yet. Retrying in 10 seconds..."
+              echo "Attempt $i: Checking if the server is reachable via ping..."
+              ping -c 3 -W 5 $HOST && break
+              echo "Server is not responding to ping yet. Retrying in 10 seconds..."
               sleep 10
             done
 
-            if ! nc -zvw3 ${{ secrets.DROPLET_IP }} 22; then
-              echo "SSH connection failed after 5 attempts."
+            if ! ping -c 3 -W 5 $HOST; then
+              echo "Server did not respond to ping after 5 attempts. Exiting."
               exit 1
             fi
 
@@ -174,7 +177,7 @@ jobs:
             apt-get update -yq
 
             echo "=============> Install MongoDB 8.2.0"
-            apt-get install -yq mongodb-org=8.2.0 mongodb-org-database=8.2.0 mongodb-org-server=8.2.0 mongodb-mongosh mongodb-org-mongos=8.2.0 mongodb-org-tools=8.2.0
+            sudo apt-get install -yq mongodb-org=8.0.0 mongodb-org-database=8.0.0 mongodb-org-server=8.0.0 mongodb-mongosh mongodb-org-mongos=8.0.0 mongodb-org-tools=8.0.0
 
             echo "=============> Prevent automatic updates of MongoDB packages"
             echo "mongodb-org hold" | sudo dpkg --set-selections
