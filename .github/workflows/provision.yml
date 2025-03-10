@@ -82,7 +82,7 @@ jobs:
           doctl compute droplet create ${{ env.DROPLET_NAME }} \
             --region blr1 \
             --size s-1vcpu-1gb \
-            --image mern \
+            --image ubuntu-22-04-x64 \
             --ssh-keys ${{ secrets.SSH_KEY_ID }} \
             --project-id "$PROJECT_ID" \
             --wait
@@ -130,8 +130,41 @@ jobs:
           host: ${{ secrets.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: 900s
           script: |
             echo "Connected successfully!"
-            whoami
-            pwd
-            ls -l
+
+            # Update package list
+            apt update && apt upgrade -y
+
+            # install a NodeJs, npm 
+            apt install -y curl git nodejs npm
+
+            # pm2 package for monitor process running. 
+            npm install -g pm2
+
+            # Import the public key
+            curl -fsSL https://pgp.mongodb.com/server-8.2.asc | sudo gpg --dearmor -o /usr/share/keyrings/mongodb-server-8.2.gpg
+          
+            # Add MongoDB repository
+            echo "deb [signed-by=/usr/share/keyrings/mongodb-server-8.2.gpg] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/8.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.2.list
+
+            # Update package lists again
+            sudo apt update -y
+
+            # Install MongoDB 8.2.0
+            sudo apt install -y mongodb-org=8.2.0 mongodb-org-server=8.2.0 mongodb-org-shell=8.2.0 mongodb-org-mongos=8.2.0 mongodb-org-tools=8.2.0
+            
+            # Prevent automatic updates
+            echo "mongodb-org hold" | sudo dpkg --set-selections
+            echo "mongodb-org-server hold" | sudo dpkg --set-selections
+            echo "mongodb-org-shell hold" | sudo dpkg --set-selections
+            echo "mongodb-org-mongos hold" | sudo dpkg --set-selections
+            echo "mongodb-org-tools hold" | sudo dpkg --set-selections
+
+            # Start and enable MongoDB service
+            sudo systemctl start mongod
+            sudo systemctl enable mongod
+
+            # Check MongoDB service status
+            sudo systemctl status mongod --no-pager            
