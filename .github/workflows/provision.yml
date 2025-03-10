@@ -124,16 +124,10 @@ jobs:
         run: |
           echo DROPLET_IP: ${{ secrets.DROPLET_IP }}
 
-      - name: Conenct to Droplet SSH base
-        uses: appleboy/ssh-action@v1.2.1
+      - name: Ping to the server via SSH
         env:
           HOST: ${{ secrets.DROPLET_IP }}
-        with:
-          host: ${{ secrets.DROPLET_IP }}
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          timeout: 900s
-          script: |
+        run: |
             # Retry Ping Check up to 5 times
             echo "Start connecting to the HOST: $HOST"
             for i in {1..5}; do
@@ -150,6 +144,14 @@ jobs:
 
             echo "Connected successfully!................"
 
+      - name: Post Deployment install additional softwares
+        uses: appleboy/ssh-action@v1.2.1
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: 900s
+          script: |
             echo "=============> Set non-interactive mode to prevent prompts."
             export DEBIAN_FRONTEND=noninteractive
 
