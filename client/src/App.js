@@ -1,12 +1,14 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 
 function App() {
   const [response, setResponse] = useState("");
 
+  // Read API URL from environment variable
+  const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
+
   const callApi = async () => {
     try {
-      const res = await fetch("http://165.232.190.41:4100/express/");
+      const res = await fetch(`${API_BASE_URL}/express/`);
       const text = await res.text();
       setResponse(text);
     } catch (error) {

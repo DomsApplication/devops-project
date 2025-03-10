@@ -5,37 +5,32 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const allowedOrigins = ['http://localhost:80', 'http://165.232.190.41:3100'];
+// Read allowed origins from .env and convert them into an array
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [];
 
-// CORS configuration
 const corsOptions = {
     origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-    } else {
-        callback(new Error('Not allowed by CORS'));
-    }
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
     },
-    methods: ['GET', 'POST'], // Allow specific HTTP methods
-    credentials: true         // Allow cookies if needed
+    methods: ['GET', 'POST'], 
+    credentials: true
 };
 
 // Apply CORS middleware
-app.use(cors(corsOptions)); 
-// app.use(cors({
-//     origin: 'http://localhost:3000', // Allow only frontend origin
-//     methods: ['GET', 'POST'], // Allow specific HTTP methods
-//     credentials: true // Allow cookies if needed
-// }));
+app.use(cors(corsOptions));
+
 app.get('/express/', (request, response) => {
     response.send(`
         <h1>Status Code: ${response.statusCode}</h1>
         <h2>Hello World123</h2>
-    `)
+    `);
 });
 
 app.listen(PORT, () => {
     console.log(`App is listening on http://localhost:${PORT}`);
-})
+    console.log(`Allowed Origins:`, allowedOrigins);
+});
