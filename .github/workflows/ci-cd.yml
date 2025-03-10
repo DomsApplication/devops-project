@@ -121,6 +121,8 @@ jobs:
             npm install
 
             cd /home/${{ github.ref_name }}/client
+            export NODE_OPTIONS="--max-old-space-size=1024"
+            npm cache clean --force
             npm install
             npm run build  # Build React frontend
 
