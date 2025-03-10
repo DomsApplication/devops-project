@@ -95,7 +95,7 @@ jobs:
             
             # Start Express backend on port 5000
             cd /home/${{ github.ref_name }}/server
-            PORT=5000 pm2 start npm --name "backend" -- start
+            PORT=4100 pm2 start npm --name "backend" -- start
             
             # Start React frontend with serve on port 3000
             cd /home/${{ github.ref_name }}/client
