@@ -5,7 +5,7 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const allowedOrigins = ['http://localhost:80', 'http://139.59.46.155'];
+const allowedOrigins = ['http://localhost:80', 'http://165.232.190.41:3100'];
 
 // CORS configuration
 const corsOptions = {

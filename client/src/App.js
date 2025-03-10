@@ -6,7 +6,7 @@ function App() {
 
   const callApi = async () => {
     try {
-      const res = await fetch("http://139.59.46.155:3000/express/");
+      const res = await fetch("http://165.232.190.41:4100/express/");
       const text = await res.text();
       setResponse(text);
     } catch (error) {
