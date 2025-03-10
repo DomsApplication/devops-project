@@ -162,7 +162,20 @@ jobs:
             apt-get update -yq && apt-get upgrade -yq --allow-downgrades
 
             echo "=============> Install Node.js, npm, and git"
-            apt-get install -yq gnupg curl git nodejs npm
+            apt-get install -yq gnupg curl npm
+
+            echo "=============> Add NodeSource repository for Node.js 18"
+            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+
+            echo "=============> Install Node.js 18 and npm"
+            sudo apt-get install -y nodejs
+
+            echo "=============> Update npm to the latest version"
+            sudo npm install -g npm@latest
+       
+            echo "=============> Verify Installation"
+            node -v
+            npm -v
 
             echo "=============> Install pm2 for process management"
             npm install -g pm2
