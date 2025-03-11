@@ -124,23 +124,10 @@ jobs:
         run: |
           echo DROPLET_IP: ${{ secrets.DROPLET_IP }}
 
-
-  post-deployment:
-    name: post deployment
-    needs: provision
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'default' }}
-    permissions:
-      id-token: write
-      contents: write
-      pull-requests: write
-      packages: read
-
-    steps:
       - name: Post Deployment install additional softwares
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: ${{ secrets.DROPLET_IP }}
+          host: ${{ env.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 900s
