@@ -132,7 +132,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 900s
           script: |
-            echo "Connected successfully!................"
+            echo "Connected successfully!...................."
 
             echo "=============> Set non-interactive mode to prevent prompts."
             export DEBIAN_FRONTEND=noninteractive
