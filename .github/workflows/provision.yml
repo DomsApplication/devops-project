@@ -135,11 +135,8 @@ jobs:
           "/repos/${{ github.repository }}/environments/${{ env.DROPLET_NAME }}"
           echo -n "${{ env.DROPLET_IP }}" | gh secret set DROPLET_IP --env ${{ env.DROPLET_NAME }} --repo ${{ github.repository }}
 
-      - name: Debug Information of SSH connect
-        run: |
-          echo DROPLET_IP: ${{ secrets.DROPLET_IP }}
-
       - name: Post Deployment install additional softwares
+        if: env.DROPLET_EXISTS == 'false'
         uses: appleboy/ssh-action@v1.2.1
         with:
           host: ${{ secrets.DROPLET_IP }}
