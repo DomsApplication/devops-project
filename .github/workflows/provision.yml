@@ -3,10 +3,6 @@ name: Provision environment
 on:
   workflow_dispatch:
     inputs:
-      environment:
-        description: 'Environment to run the workflow against'
-        type: environment
-        required: true
       project-name:
         description: "Digital Ocean Project name for provision resource"
         required: true
@@ -25,7 +21,7 @@ jobs:
   provision:
     name: Provision and Deployment
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'default' }}
+    #environment: ${{ github.event.inputs.environment || 'default' }}
     permissions:
       id-token: write
       contents: write
@@ -73,7 +69,7 @@ jobs:
 
       - name: Debug Information
         run: |
-          echo environment: ${{ github.event.inputs.environment || 'default' }}
+          echo environment: ${{ github.event.inputs.environment || 'N/A' }}
           echo github actor: ${{ github.actor }}
           echo github actor id: ${{ github.actor_id }}
           echo branch or tag: ${{ github.ref_type }}
@@ -138,8 +134,8 @@ jobs:
       - name: Wait for SSH Service Initialization
         if: env.DROPLET_EXISTS == 'false'
         run: |
-          echo "Waiting for SSH service to be ready..."
-          sleep 60  # Wait for 60 seconds before attempting SSH connection
+          echo "Waiting for 90 seconds SSH service to be ready..."
+          sleep 90  # Wait for 90 seconds before attempting SSH connection
 
       - name: Post Deployment install additional softwares
         if: env.DROPLET_EXISTS == 'false'

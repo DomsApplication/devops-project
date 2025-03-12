@@ -26,9 +26,10 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs
 sudo npm install -g npm@latest
 
-echo "=============> Verify Installation"
-node -v
-npm -v
+echo "========================================"
+echo -n "NodeJS version: "; node -v
+echo -n "npm version: "; npm -v
+echo "========================================"
 
 echo "=============> Install pm2 for process management"
 npm install -g pm2
