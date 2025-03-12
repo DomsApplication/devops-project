@@ -39,7 +39,6 @@ jobs:
           echo git_branch: ${GITHUB_REF#refs/heads/}
           echo github.event.pull_request.merged: ${{ github.event.pull_request.merged }}
           echo HOST: ${{ secrets.HOST1 }}
-          echo key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Ensure target directory exists on remote server
         uses: appleboy/ssh-action@v1.2.1
