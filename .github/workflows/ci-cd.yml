@@ -89,8 +89,8 @@ jobs:
             echo "****************** Checking PM2 Running Processes *****************"
 
             # Check if a PM2 process for the current feature branch exists
-            BACKEND_PM2_ID=$(pm2 id "server-${{ github.ref_name }}")
-            FRONTEND_PM2_ID=$(pm2 id "client-${{ github.ref_name }}")
+            BACKEND_PM2_ID=$(pm2 id "server-${{ github.ref_name }}" | sed 's/\[//g' | sed 's/\]//g')
+            FRONTEND_PM2_ID=$(pm2 id "client-${{ github.ref_name }}" | sed 's/\[//g' | sed 's/\]//g')
 
             if [ -z "$BACKEND_PM2_ID" ] || [ "$BACKEND_PM2_ID" == "[]" ]; then
                 echo "No existing process found for this feature branch. Assigning new ports."
