@@ -145,4 +145,4 @@ jobs:
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 900s
-          script_path: ./.github/workflows/script/deploy.sh
+          script_path: ./.github/workflows/script/provision.sh
