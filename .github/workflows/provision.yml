@@ -131,7 +131,7 @@ jobs:
 
       - name: Testing Step
         run: |
-          echo working_directory    : ${{ github.workflow }}
+          echo working_directory: $WORKFLOW_FILE_PATH
           pwd
 
       - name: testing script
