@@ -76,7 +76,7 @@ jobs:
       # This is for running the commands on the remote server
       - name: Deploy Application
         uses: appleboy/ssh-action@v1.2.1
-        envs:
+        env:
           ref_name: ${{ github.ref_name }}
           secret_host: ${{ secrets.HOST1 }}
         with:
