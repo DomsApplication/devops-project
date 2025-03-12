@@ -16,6 +16,9 @@ on:
 permissions:
   contents: write
 
+env:
+  WORKFLOW_PATH: './.github/workflows'
+
 jobs:
   provision:
     name: Provision and Deployment
@@ -131,7 +134,7 @@ jobs:
 
       - name: Testing Step
         run: |
-          echo working_directory: $WORKFLOW_FILE_PATH
+          echo working_directory: $WORKFLOW_PATH
           pwd
 
       - name: testing script
