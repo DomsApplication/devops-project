@@ -135,6 +135,12 @@ jobs:
           "/repos/${{ github.repository }}/environments/${{ env.DROPLET_NAME }}"
           echo -n "${{ env.DROPLET_IP }}" | gh secret set DROPLET_IP --env ${{ env.DROPLET_NAME }} --repo ${{ github.repository }}
 
+      - name: Wait for SSH Service Initialization
+        if: env.DROPLET_EXISTS == 'false'
+        run: |
+          echo "Waiting for SSH service to be ready..."
+          sleep 60  # Wait for 60 seconds before attempting SSH connection
+
       - name: Post Deployment install additional softwares
         if: env.DROPLET_EXISTS == 'false'
         uses: appleboy/ssh-action@v1.2.1
