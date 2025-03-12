@@ -5,8 +5,8 @@ echo "Deployment started..."
 echo "****************** Checking PM2 Running Processes *****************"
 
 # Check if a PM2 process for the current feature branch exists
-BACKEND_PM2_ID=$(pm2 id "server-${{ github.ref_name }}")
-FRONTEND_PM2_ID=$(pm2 id "client-${{ github.ref_name }}")
+BACKEND_PM2_ID=$(pm2 id "server-$ref_name")
+FRONTEND_PM2_ID=$(pm2 id "client-$ref_name")
 
 if [ -z "$BACKEND_PM2_ID" ]; then
     echo "No existing process found for this feature branch. Assigning new ports."
@@ -38,31 +38,31 @@ else
     # Retrieve existing PORT value from the existing PM2 process
     EXPRESS_PORT=$(pm2 env "$BACKEND_PM2_ID" | grep "PORT" | sed 's/.*PORT: \([0-9]*\).*/\1/')
     REACT_PORT=$(pm2 env "$FRONTEND_PM2_ID" | grep "PORT" | sed 's/.*PORT: \([0-9]*\).*/\1/')
-    pm2 delete "server-${{ github.ref_name }}"
-    pm2 delete "client-${{ github.ref_name }}"
+    pm2 delete "server-$ref_name"
+    pm2 delete "client-$ref_name"
     echo "Reusing existing Express PORT: $EXPRESS_PORT"
 fi
 
 echo "****************** Creating .env Files *****************"
 
 # Create .env file for the server
-echo "PORT=$EXPRESS_PORT" > /home/${{ github.ref_name }}/server/.env
-echo "ALLOWED_ORIGINS=http://${{ secrets.HOST1 }}:$REACT_PORT,http://165.232.190.41:$REACT_PORT" >> /home/${{ github.ref_name }}/server/.env
+echo "PORT=$EXPRESS_PORT" > /home/$ref_name/server/.env
+echo "ALLOWED_ORIGINS=http://$secret_host:$REACT_PORT,http://165.232.190.41:$REACT_PORT" >> /home/$ref_name/server/.env
 
 # Create .env file for the client
-echo "REACT_APP_API_URL=http://${{ secrets.HOST1 }}:$EXPRESS_PORT" > /home/${{ github.ref_name }}/client/.env
+echo "REACT_APP_API_URL=http://$secret_host:$EXPRESS_PORT" > /home/$ref_name/client/.env
 
 echo "****************** Updating & Installing Dependencies *****************"
-cd /home/${{ github.ref_name }}/server
+cd /home/$ref_name/server
 npm install
-PORT=$EXPRESS_PORT pm2 start npm --name "server-${{ github.ref_name }}" -- start
+PORT=$EXPRESS_PORT pm2 start npm --name "server-$ref_name" -- start
 
-cd /home/${{ github.ref_name }}/client
+cd /home/$ref_name/client
 export NODE_OPTIONS="--max-old-space-size=1024"
 npm cache clean --force
 npm install
 npm run build  # Build React frontend
-pm2 serve build/ $REACT_PORT --name "client-${{ github.ref_name }}" --spa
+pm2 serve build/ $REACT_PORT --name "client-$ref_name" --spa
 
 echo "****************** Starting Applications with PM2 *****************"
 

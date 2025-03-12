@@ -76,11 +76,15 @@ jobs:
       # This is for running the commands on the remote server
       - name: Deploy Application
         uses: appleboy/ssh-action@v1.2.1
+        envs:
+          ref_name: ${{ github.ref_name }}
+          secret_host: ${{ secrets.HOST1 }}
         with:
           host: ${{ secrets.HOST1 }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 900s
+          envs: ref_name,secret_host
           script_path: ./.github/workflows/script/deployment.sh
 
 
