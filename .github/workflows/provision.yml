@@ -131,6 +131,7 @@ jobs:
 
       - name: Testing Step
         run: |
+          echo working_directory    : ${{ github.workflow }}
           pwd
 
       - name: testing script
@@ -140,7 +141,7 @@ jobs:
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 900s
-          script_path: ./deploy.sh
+          script_path: ./.github/workflows/script/deploy.sh
 
       - name: Post Deployment install additional softwares
         uses: appleboy/ssh-action@v1.2.1
