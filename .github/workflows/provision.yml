@@ -31,7 +31,8 @@ jobs:
       contents: write
       pull-requests: write
       packages: read
-
+    
+    if: github.ref_name == 'main'
     steps:
       - name: Check out code
         uses: actions/checkout@v3
