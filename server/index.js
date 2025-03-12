@@ -26,7 +26,7 @@ app.use(cors(corsOptions));
 app.get('/express/', (request, response) => {
     response.send(`
         <h1>Status Code: ${response.statusCode}</h1>
-        <h2>Hello World123</h2>
+        <h2>Hello World123 updated</h2>
     `);
 });
 
