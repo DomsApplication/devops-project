@@ -131,6 +131,7 @@ jobs:
 
       - name: Testing Step
         run: |
+          echo working_directory    : ${{ . }}
           pwd
 
       - name: testing script
