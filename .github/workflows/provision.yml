@@ -8,10 +8,15 @@ on:
         type: environment
         required: true
       project-name:
-        description: "Provide DO project name"
+        description: "Digital Ocean Project name for provision resource"
         required: true
         type: string
         default: "first-project"
+      instance-name:
+        description: "The provided value will append suffix with 'std-pjt-mern-'"
+        required: true
+        type: string
+        default: "default"
 
 permissions:
   contents: write
@@ -40,7 +45,7 @@ jobs:
 
       - name: Generate Droplate Unique Name
         run: |
-          DROPLET_NAME_GEN="${{ github.ref_name }}"
+          DROPLET_NAME_GEN= "std-pjt-mern-${{ inputs.instance-name }}"
           echo "DROPLET_NAME=$DROPLET_NAME_GEN" >> $GITHUB_ENV
 
       - name: Get project details
@@ -136,8 +141,8 @@ jobs:
       - name: Post Deployment install additional softwares
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: ${{ secrets.DROPLET_IP }}
+          host: ${{ env.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 900s
-          script_path: $WORKFLOW_PATH/script/deploy.sh
+          script_path: ./.github/workflows/script/deploy.sh
