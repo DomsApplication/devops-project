@@ -132,11 +132,6 @@ jobs:
         run: |
           echo DROPLET_IP: ${{ secrets.DROPLET_IP }}
 
-      - name: Testing Step
-        run: |
-          echo working_directory: $WORKFLOW_PATH
-          pwd
-
       - name: testing script
         uses: appleboy/ssh-action@v1.2.1
         with:
@@ -144,7 +139,7 @@ jobs:
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 900s
-          script_path: ./.github/workflows/script/deploy.sh
+          script_path: $WORKFLOW_PATH/script/deploy.sh
 
       - name: Post Deployment install additional softwares
         uses: appleboy/ssh-action@v1.2.1
