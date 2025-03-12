@@ -45,7 +45,7 @@ jobs:
 
       - name: Generate Droplate Unique Name
         run: |
-          DROPLET_NAME_GEN= "std-pjt-mern-${{ inputs.instance-name }}"
+          DROPLET_NAME_GEN="std-pjt-mern-${{ inputs.instance-name }}"
           echo "DROPLET_NAME=$DROPLET_NAME_GEN" >> $GITHUB_ENV
 
       - name: Get project details
