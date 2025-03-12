@@ -145,7 +145,7 @@ jobs:
         if: env.DROPLET_EXISTS == 'false'
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: ${{ secrets.DROPLET_IP }}
+          host: ${{ env.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 900s
