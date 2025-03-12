@@ -8,10 +8,15 @@ on:
         type: environment
         required: true
       project-name:
-        description: "Provide DO project name"
+        description: "Digital Ocean Project name for provision resource"
         required: true
         type: string
         default: "first-project"
+      instance-name:
+        description: "The provided value will append suffix with 'std-pjt-mern-'"
+        required: true
+        type: string
+        default: "default"
 
 permissions:
   contents: write
@@ -26,8 +31,14 @@ jobs:
       contents: write
       pull-requests: write
       packages: read
-
+    
+    if: github.ref_name == 'main'
     steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref_name }}
+
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
         with:
@@ -35,7 +46,7 @@ jobs:
 
       - name: Generate Droplate Unique Name
         run: |
-          DROPLET_NAME_GEN="${{ github.ref_name }}"
+          DROPLET_NAME_GEN="std-pjt-mern-${{ inputs.instance-name }}"
           echo "DROPLET_NAME=$DROPLET_NAME_GEN" >> $GITHUB_ENV
 
       - name: Get project details
@@ -112,31 +123,22 @@ jobs:
           echo "✅ Droplet Name: $DROPLET_NAME"
           echo "✅ Droplet ID: $DROPLET_ID"
           echo "✅ Droplet Public IP: $DROPLET_IP"
-          
+
       - name: Set environment in GitHub Secrets
         if: env.DROPLET_EXISTS == 'false'
         env:
           GITHUB_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          echo -n "${{ env.DROPLET_IP }}" | gh secret set DROPLET_IP --env ${{ github.event.inputs.environment || 'default' }} --repo ${{ github.repository }}
+          gh api \
+          -X PUT \
+          -H "Accept: application/vnd.github.v3+json" \
+          "/repos/${{ github.repository }}/environments/${{ env.DROPLET_NAME }}"
+          echo -n "${{ env.DROPLET_IP }}" | gh secret set DROPLET_IP --env ${{ env.DROPLET_NAME }} --repo ${{ github.repository }}
 
       - name: Debug Information of SSH connect
         run: |
           echo DROPLET_IP: ${{ secrets.DROPLET_IP }}
 
-
-  post-deployment:
-    name: post deployment
-    needs: provision
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'default' }}
-    permissions:
-      id-token: write
-      contents: write
-      pull-requests: write
-      packages: read
-
-    steps:
       - name: Post Deployment install additional softwares
         uses: appleboy/ssh-action@v1.2.1
         with:
@@ -144,64 +146,4 @@ jobs:
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 900s
-          script: |
-            echo "Connected successfully!................"
-
-            echo "=============> Set non-interactive mode to prevent prompts."
-            export DEBIAN_FRONTEND=noninteractive
-
-            echo "=============> Killing any running apt processes"
-            sudo killall apt apt-get || true
-            sudo rm -rf /var/lib/apt/lists/lock /var/lib/dpkg/lock /var/lib/dpkg/lock-frontend
-
-            echo "=============> Updating package lists"
-            sudo apt-get update -yq
-
-            echo "=============> Upgrading packages (avoid SSH prompt issue)"
-            sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confold" upgrade -yq --allow-downgrades
-
-            echo "=============> Installing essential packages"
-            sudo apt-get install -yq gnupg curl git unzip
-            export DEBIAN_FRONTEND=noninteractive
-            
-            echo "=============> Installing Node.js 20 & Latest npm"
-            sudo apt-get remove -y nodejs npm libnode-dev || true
-            sudo apt-get autoremove -y
-            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-            sudo apt-get install -y nodejs
-            sudo npm install -g npm@latest
-
-            echo "=============> Verify Installation"
-            node -v
-            npm -v
-
-            echo "=============> Install pm2 for process management"
-            npm install -g pm2
-
-            echo "=============> To import the MongoDB public GPG key, run the following command:"
-            curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-8.0.gpg --dearmor
-
-            echo "=============> Create the list file for Ubuntu 22.04"
-            echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/8.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.0.list
-
-
-            echo "=============> Update package lists again"
-            apt-get update -yq
-
-            echo "=============> Install MongoDB 8.2.0"
-            sudo apt-get install -yq mongodb-org=8.0.0 mongodb-org-database=8.0.0 mongodb-org-server=8.0.0 mongodb-mongosh mongodb-org-mongos=8.0.0 mongodb-org-tools=8.0.0
-
-            echo "=============> Prevent automatic updates of MongoDB packages"
-            echo "mongodb-org hold" | sudo dpkg --set-selections
-            echo "mongodb-org-database hold" | sudo dpkg --set-selections
-            echo "mongodb-org-server hold" | sudo dpkg --set-selections
-            echo "mongodb-mongosh hold" | sudo dpkg --set-selections
-            echo "mongodb-org-mongos hold" | sudo dpkg --set-selections
-            echo "mongodb-org-tools hold" | sudo dpkg --set-selections
-
-            echo "=============> Start and enable MongoDB service"
-            sudo systemctl start mongod
-            sudo systemctl enable mongod
-
-            echo "=============> Check MongoDB service status"
-            sudo systemctl status mongod --no-pager
+          script_path: ./.github/workflows/script/deploy.sh
