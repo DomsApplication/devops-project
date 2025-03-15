@@ -33,6 +33,7 @@ echo "========================================"
 
 echo "=============> Install pm2 for process management"
 npm install -g pm2
+echo pm2 id "sample"
 
 echo "=============> To import the MongoDB public GPG key, run the following command:"
 curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-8.0.gpg --dearmor

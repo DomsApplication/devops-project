@@ -7,9 +7,9 @@ on:
         description: 'Environment to run the workflow against'
         type: environment
         required: true
-  push:
-    branches:
-      - '**'
+  # push:
+  #   branches:
+  #     - '**'
 
 permissions:
   contents: write
@@ -42,12 +42,12 @@ jobs:
           echo git_hash: $(git rev-parse --short "$GITHUB_SHA")
           echo git_branch: ${GITHUB_REF#refs/heads/}
           echo github.event.pull_request.merged: ${{ github.event.pull_request.merged }}
-          echo HOST: ${{ secrets.HOST1 }}
+          echo HOST: ${{ secrets.DROPLET_IP }}
 
       - name: Ensure target directory exists on remote server
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: ${{ secrets.HOST1 }}
+          host: ${{ secrets.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
@@ -57,7 +57,7 @@ jobs:
       - name: CI - Move frontend source to remote server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.HOST1 }}
+          host: ${{ secrets.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 600s
@@ -69,7 +69,7 @@ jobs:
       - name: CI - Move backend source to remote server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.HOST1 }}
+          host: ${{ secrets.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 600s
@@ -81,7 +81,7 @@ jobs:
       - name: Deploy Application
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: ${{ secrets.HOST1 }}
+          host: ${{ secrets.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 900s
@@ -131,10 +131,10 @@ jobs:
 
             # Create .env file for the server
             echo "PORT=$EXPRESS_PORT" > /home/${{ github.ref_name }}/server/.env
-            echo "ALLOWED_ORIGINS=http://${{ secrets.HOST1 }}:$REACT_PORT,http://165.232.190.41:$REACT_PORT" >> /home/${{ github.ref_name }}/server/.env
+            echo "ALLOWED_ORIGINS=http://${{ secrets.DROPLET_IP }}:$REACT_PORT,http://165.232.190.41:$REACT_PORT" >> /home/${{ github.ref_name }}/server/.env
 
             # Create .env file for the client
-            echo "REACT_APP_API_URL=http://${{ secrets.HOST1 }}:$EXPRESS_PORT" > /home/${{ github.ref_name }}/client/.env
+            echo "REACT_APP_API_URL=http://${{ secrets.DROPLET_IP }}:$EXPRESS_PORT" > /home/${{ github.ref_name }}/client/.env
 
             echo "****************** Updating & Installing Dependencies *****************"
             cd /home/${{ github.ref_name }}/server
