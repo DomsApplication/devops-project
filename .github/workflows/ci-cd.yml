@@ -7,9 +7,9 @@ on:
         description: 'Environment to run the workflow against'
         type: environment
         required: true
-  push:
-    branches:
-      - '**'
+  # push:
+  #   branches:
+  #     - '**'
 
 permissions:
   contents: write
