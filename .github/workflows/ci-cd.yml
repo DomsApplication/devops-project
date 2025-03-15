@@ -152,16 +152,3 @@ jobs:
 
             pm2 save
             pm2 startup
-
-      - name: Save Build URL to File
-        run: |
-          echo "http://${{ secrets.DROPLET_IP }}:$REACT_PORT" > build_url.txt
-          cat build_url.txt
-
-      - name: Commit and Push Build URL
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add build_url.txt
-          git commit -m "Add build URL for ${{ github.ref_name }}"
-          git push
