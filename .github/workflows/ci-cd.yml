@@ -131,7 +131,7 @@ jobs:
 
             # Create .env file for the server
             echo "PORT=$EXPRESS_PORT" > /home/${{ github.ref_name }}/server/.env
-            echo "ALLOWED_ORIGINS=http://${{ secrets.DROPLET_IP }}:$REACT_PORT,http://165.232.190.41:$REACT_PORT" >> /home/${{ github.ref_name }}/server/.env
+            echo "ALLOWED_ORIGINS=http://${{ secrets.DROPLET_IP }}:$REACT_PORT,http://app.merav.co.in" >> /home/${{ github.ref_name }}/server/.env
 
             # Create .env file for the client
             echo "REACT_APP_API_URL=http://${{ secrets.DROPLET_IP }}:$EXPRESS_PORT" > /home/${{ github.ref_name }}/client/.env
