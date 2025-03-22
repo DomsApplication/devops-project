@@ -1,7 +1,7 @@
 {
   "name": "first-react-app",
   "version": "0.1.0",
-  "homepage": "/student1/",
+  "homepage": "/demo/",
   "private": true,
   "dependencies": {
     "react": "^16.8.6",
