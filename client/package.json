@@ -2,7 +2,7 @@
   "name": "first-react-app",
   "version": "0.1.0",
   "private": true,
-  "homepage": "/student2/",
+  "homepage": "/ganesh_poc/",
   "dependencies": {
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
