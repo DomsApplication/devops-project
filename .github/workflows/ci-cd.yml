@@ -186,7 +186,7 @@ jobs:
               echo "Nginx config file does not exist. Creating new file for students..."
 
               # Create the Nginx config file and add the first student entry inside the server block
-              sudo bash -c "cat > $NGINX_CONFIG_FILE <<EOF
+              sudo bash -c "cat > $NGINX_CONFIG_FILE <<'EOF'
               server {
                   listen 80;
                   server_name app.merav.co.in;
