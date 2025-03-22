@@ -146,7 +146,7 @@ jobs:
             npm cache clean --force
             npm install
             npm run build  # Build React frontend
-            find . -mindepth 1 ! -name 'build' -exec rm -rf {} +  # Remove everything except build
+            # find . -mindepth 1 ! -name 'build' -exec rm -rf {} +  # Remove everything except build
             pm2 serve build/ $REACT_PORT --name "client-${{ github.ref_name }}" --spa
 
             echo "****************** Starting Applications with PM2 *****************"
