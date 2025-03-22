@@ -152,3 +152,63 @@ jobs:
 
             pm2 save
             pm2 startup
+
+      - name: Update Nginx Configuration for Student URL Mapping
+        uses: appleboy/ssh-action@v1.2.1
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: 600s
+          script: |
+            echo "****************** Updating Nginx Configuration for Student URLs *****************"
+
+            # Define the file location
+            NGINX_CONFIG_FILE="/etc/nginx/sites-available/students"
+
+            # Check if the Nginx config file exists
+            if [ -f "$NGINX_CONFIG_FILE" ]; then
+              echo "Nginx config file exists. Checking if entry for ${GITHUB_REF} already exists..."
+
+              # Check if the entry for the current student already exists
+              if ! grep -q "location /${GITHUB_REF}/" "$NGINX_CONFIG_FILE"; then
+                echo "No existing entry for ${GITHUB_REF}. Adding new entry for this student..."
+
+                # Add the new student URL mapping to the Nginx configuration
+                sudo bash -c "cat >> $NGINX_CONFIG_FILE <<EOF
+              location /${GITHUB_REF}/ {
+                  proxy_pass http://localhost:$REACT_PORT;
+                  proxy_set_header Host \$host;
+                  proxy_set_header X-Real-IP \$remote_addr;
+                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                  rewrite ^/${GITHUB_REF}/(.*)\$ /\$1 break;
+              }
+              EOF"
+                      else
+                        echo "Entry for ${GITHUB_REF} already exists. Skipping update."
+                      fi
+                    else
+                      echo "Nginx config file does not exist. Creating new file for students..."
+
+                      # Create the Nginx config file and add the first student entry
+                      sudo bash -c "cat > $NGINX_CONFIG_FILE <<EOF
+              server {
+                  listen 80;
+                  server_name app.merav.co.in;
+
+                  location /${GITHUB_REF}/ {
+                      proxy_pass http://localhost:$REACT_PORT;
+                      proxy_set_header Host \$host;
+                      proxy_set_header X-Real-IP \$remote_addr;
+                      proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                      rewrite ^/${GITHUB_REF}/(.*)\$ /\$1 break;
+                  }
+              }
+              EOF"
+                    fi
+
+                    # Link to enabled sites and restart Nginx
+                    sudo ln -sf /etc/nginx/sites-available/students /etc/nginx/sites-enabled/
+                    sudo nginx -t
+                    sudo systemctl restart nginx
+                    echo "✅ Nginx Configuration Updated and Restarted Successfully"
