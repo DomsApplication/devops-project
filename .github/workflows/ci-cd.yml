@@ -168,7 +168,7 @@ jobs:
 
                 # Check if the entry for the current student already exists
                 if ! grep -q "location $STUDENT_URL" "$NGINX_CONFIG_FILE"; then
-                    echo "No existing entry for ${{ github.ref_name }}. Adding new entry for this student..."
+                    echo "No existing  entry for ${{ github.ref_name }}. Adding new entry for this student..."
 
                     # Add the new student URL mapping to the Nginx configuration inside the server block
                     sudo sed -i "/server {/a \\
