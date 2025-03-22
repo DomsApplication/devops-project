@@ -154,14 +154,6 @@ jobs:
             pm2 save
             pm2 startup
 
-      - name: Update Nginx Configuration for Student URL Mapping
-        uses: appleboy/ssh-action@v1.2.1
-        with:
-          host: ${{ secrets.DROPLET_IP }}
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          timeout: 600s
-          script: |
             echo "****************** Updating Nginx Configuration for Student URLs *****************"
 
             # Define the file location
