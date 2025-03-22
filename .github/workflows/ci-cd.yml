@@ -18,7 +18,7 @@ jobs:
   deploy:
     name: Build and Deployment
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'std-pjt-mern-poc' }}
+    environment: ${{ github.event.inputs.environment || 'std-pjt-mern-poc1' }}
     permissions:
       id-token: write
       contents: write
@@ -165,50 +165,51 @@ jobs:
 
             # Define the file location
             NGINX_CONFIG_FILE="/etc/nginx/sites-available/students"
+            STUDENT_URL="/${{ github.ref_name }}/"
+            STUDENT_PORT=$REACT_PORT
 
             # Check if the Nginx config file exists
             if [ -f "$NGINX_CONFIG_FILE" ]; then
               echo "Nginx config file exists. Checking if entry for ${{ github.ref_name }} already exists..."
 
               # Check if the entry for the current student already exists
-              if ! grep -q "location /${{ github.ref_name }}/" "$NGINX_CONFIG_FILE"; then
+              if ! grep -q "location $STUDENT_URL" "$NGINX_CONFIG_FILE"; then
                 echo "No existing entry for ${{ github.ref_name }}. Adding new entry for this student..."
 
-                # Add the new student URL mapping to the Nginx configuration
-                sudo bash -c "cat >> $NGINX_CONFIG_FILE <<EOF
-              location /${{ github.ref_name }}/ {
-                  proxy_pass http://localhost:$REACT_PORT;
-                  proxy_set_header Host \$host;
-                  proxy_set_header X-Real-IP \$remote_addr;
-                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                  rewrite ^/${{ github.ref_name }}/(.*)\$ /\$1 break;
-              }
-              EOF"
-                      else
-                        echo "Entry for ${{ github.ref_name }} already exists. Skipping update."
-                      fi
-                    else
-                      echo "Nginx config file does not exist. Creating new file for students..."
+                # Add the new student URL mapping to the Nginx configuration inside the server block
+                sudo sed -i "/server {/a \\
+                location $STUDENT_URL { \\
+                    proxy_pass http://localhost:$STUDENT_PORT; \\
+                    proxy_set_header Host \$host; \\
+                    proxy_set_header X-Real-IP \$remote_addr; \\
+                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for; \\
+                    rewrite ^/$STUDENT_URL(.*)\$ /\$1 break; \\
+                }" "$NGINX_CONFIG_FILE"
+              else
+                echo "Entry for ${{ github.ref_name }} already exists. Skipping update."
+              fi
+            else
+              echo "Nginx config file does not exist. Creating new file for students..."
 
-                      # Create the Nginx config file and add the first student entry
-                      sudo bash -c "cat > $NGINX_CONFIG_FILE <<EOF
+              # Create the Nginx config file and add the first student entry inside the server block
+              sudo bash -c "cat > $NGINX_CONFIG_FILE <<EOF
               server {
                   listen 80;
                   server_name app.merav.co.in;
 
-                  location /${{ github.ref_name }}/ {
-                      proxy_pass http://localhost:$REACT_PORT;
+                  location $STUDENT_URL {
+                      proxy_pass http://localhost:$STUDENT_PORT;
                       proxy_set_header Host \$host;
                       proxy_set_header X-Real-IP \$remote_addr;
                       proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                      rewrite ^/${{ github.ref_name }}/(.*)\$ /\$1 break;
+                      rewrite ^/$STUDENT_URL(.*)\$ /\$1 break;
                   }
               }
               EOF"
-                    fi
+            fi
 
-                    # Link to enabled sites and restart Nginx
-                    sudo ln -sf /etc/nginx/sites-available/students /etc/nginx/sites-enabled/
-                    sudo nginx -t
-                    sudo systemctl restart nginx
-                    echo "✅ Nginx Configuration Updated and Restarted Successfully"
+            # Link to enabled sites and restart Nginx
+            sudo ln -sf /etc/nginx/sites-available/students /etc/nginx/sites-enabled/
+            sudo nginx -t
+            sudo systemctl restart nginx
+            echo "✅ Nginx Configuration Updated and Restarted Successfully"
