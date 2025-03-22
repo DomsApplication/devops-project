@@ -180,7 +180,7 @@ jobs:
                 rewrite ^$STUDENT_URL(.*)\$ /\$1 break; \\
             }" "$NGINX_CONFIG_FILE"
                 else
-                    echo "Entry for ${{ github.ref_name }} already exists. Skipping update."
+                    echo "Entry  for ${{ github.ref_name }} already exists. Skipping update."
                 fi
             else
                 echo "Nginx config file does not exist. Creating new file for students..."
