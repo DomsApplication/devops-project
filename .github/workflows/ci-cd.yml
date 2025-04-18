@@ -189,7 +189,7 @@ jobs:
                 proxy_set_header Host \$host; \\
                 proxy_set_header X-Real-IP \$remote_addr; \\
                 proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for; \\
-                rewrite ^$STUDENT_URL(.*)\$ /\$1 break; \\
+                rewrite ^$STUDENT_URLexpress/(.*)\$ /\$1 break; \\
             }" "$NGINX_CONFIG_FILE"
                 fi
             else
@@ -213,7 +213,7 @@ jobs:
                         proxy_set_header Host \$host; \\
                         proxy_set_header X-Real-IP \$remote_addr; \\
                         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for; \\
-                        rewrite ^$STUDENT_URL(.*)\$ /\$1 break; \\
+                        rewrite ^$STUDENT_URexpress/L(.*)\$ /\$1 break; \\
                     }
                 }' > $NGINX_CONFIG_FILE"
             fi
