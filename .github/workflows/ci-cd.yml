@@ -87,118 +87,107 @@ jobs:
           timeout: 900s
           script: |
             echo "****************** Checking PM2 Running Processes *****************"
-
-            # Check if a PM2 process for the current feature branch exists
+          
             BACKEND_PM2_ID=$(pm2 id "server-${{ github.ref_name }}" | sed 's/\[//g' | sed 's/\]//g')
             FRONTEND_PM2_ID=$(pm2 id "client-${{ github.ref_name }}" | sed 's/\[//g' | sed 's/\]//g')
-
+          
             if [ -z "$BACKEND_PM2_ID" ] || [ "$BACKEND_PM2_ID" == "[]" ]; then
-                echo "No existing process found for this feature branch. Assigning new ports."
-
-                # Count all PM2 processes (not just online ones)
                 PROCESS_COUNT=$(pm2 list | grep -cE "(online|stopped|errored)")
-
-                echo "Total PM2 processes (all states): $PROCESS_COUNT"
-
-                # Ensure PROCESS_COUNT is a valid number
-                if [ -z "$PROCESS_COUNT" ] || [ "$PROCESS_COUNT" -lt 0 ]; then
-                    PROCESS_COUNT=0
-                fi
-
-                # Prevent division issues by ensuring integer division
-                if [ "$PROCESS_COUNT" -eq 0 ]; then
-                    REACT_PORT=3000
-                    EXPRESS_PORT=4000
-                else
-                    REACT_PORT=$((3000 + PROCESS_COUNT / 2))
-                    EXPRESS_PORT=$((4000 + PROCESS_COUNT / 2))
-                fi
-
-                echo "Setting React to run on port $REACT_PORT"
-                echo "Setting Express to run on port $EXPRESS_PORT"
+                if [ -z "$PROCESS_COUNT" ] || [ "$PROCESS_COUNT" -lt 0 ]; then PROCESS_COUNT=0; fi
+          
+                REACT_PORT=$((3000 + PROCESS_COUNT / 2))
+                EXPRESS_PORT=$((4000 + PROCESS_COUNT / 2))
             else
-                echo "Existing process found for feature branch. Reusing existing port and deleting the existing instancs"
-
-                # Retrieve existing PORT value from the existing PM2 process
                 EXPRESS_PORT=$(pm2 env "$BACKEND_PM2_ID" | grep "PORT" | sed 's/.*PORT: \([0-9]*\).*/\1/')
                 REACT_PORT=$(pm2 env "$FRONTEND_PM2_ID" | grep "PORT" | sed 's/.*PORT: \([0-9]*\).*/\1/')
                 pm2 delete "server-${{ github.ref_name }}"
                 pm2 delete "client-${{ github.ref_name }}"
-                echo "Reusing existing Express PORT: $EXPRESS_PORT"
             fi
-
+          
             echo "****************** Creating .env Files *****************"
-
-            # Create .env file for the server
+          
             echo "PORT=$EXPRESS_PORT" > /home/${{ github.ref_name }}/server/.env
-            echo "ALLOWED_ORIGINS=http://${{ secrets.DROPLET_IP }}:$REACT_PORT,http://app.merav.co.in" >> /home/${{ github.ref_name }}/server/.env
-
-            # Create .env file for the client
-            echo "REACT_APP_API_URL=http://${{ secrets.DROPLET_IP }}:$EXPRESS_PORT" > /home/${{ github.ref_name }}/client/.env
-
+            echo "ALLOWED_ORIGINS=http://app.merav.co.in/${{ github.ref_name }},http://app.merav.co.in" >> /home/${{ github.ref_name }}/server/.env
+          
+            echo "REACT_APP_API_URL=http://app.merav.co.in/${{ github.ref_name }}/express" > /home/${{ github.ref_name }}/client/.env
+          
             echo "****************** Updating & Installing Dependencies *****************"
+          
             cd /home/${{ github.ref_name }}/server
             npm install
             PORT=$EXPRESS_PORT pm2 start npm --name "server-${{ github.ref_name }}" -- start
-
+          
             cd /home/${{ github.ref_name }}/client
             export NODE_OPTIONS="--max-old-space-size=1024"
             npm cache clean --force
             npm install
-            npm run build  # Build React frontend
+            npm run build
             pm2 serve build/ $REACT_PORT --name "client-${{ github.ref_name }}" --spa
-
-            echo "****************** Starting Applications with PM2 *****************"
-
+          
             pm2 save
             pm2 startup
+          
             echo "****************** Updating Nginx Configuration for Student URLs *****************"
-
-            # Define the file location
+          
             sudo apt update && sudo apt install -y nginx
             NGINX_CONFIG_FILE="/etc/nginx/sites-available/students"
-            STUDENT_URL="/${{ github.ref_name }}/"
-            STUDENT_PORT=$REACT_PORT
-
-            # Check if the Nginx config file exists
+            STUDENT_PATH="/${{ github.ref_name }}/"
+            STUDENT_REACT_PORT=$REACT_PORT
+            STUDENT_EXPRESS_PORT=$EXPRESS_PORT
+          
             if [ -f "$NGINX_CONFIG_FILE" ]; then
-                echo "Nginx config file exists. Checking if entry for ${{ github.ref_name }} already exists..."
-
-                # Check if the entry for the current student already exists
-                if ! grep -q "location $STUDENT_URL" "$NGINX_CONFIG_FILE"; then
-                    echo "No existing  entry for ${{ github.ref_name }}. Adding new entry for this student..."
-
-                    # Add the new student URL mapping to the Nginx configuration inside the server block
-                    sudo sed -i "/server {/a \\
-            location $STUDENT_URL { \\
-                proxy_pass http://localhost:$STUDENT_PORT; \\
-                proxy_set_header Host \$host; \\
-                proxy_set_header X-Real-IP \$remote_addr; \\
-                proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for; \\
-                rewrite ^$STUDENT_URL(.*)\$ /\$1 break; \\
-            }" "$NGINX_CONFIG_FILE"
-                else
-                    echo "Entry  for ${{ github.ref_name }} already exists. Skipping update."
-                fi
+              echo "Nginx config file exists. Checking entries..."
+          
+              if ! grep -q "location $STUDENT_PATH" "$NGINX_CONFIG_FILE"; then
+                echo "Adding React proxy for ${{ github.ref_name }}"
+                sudo sed -i "/server {/a \\  
+                location $STUDENT_PATH { \\
+                    proxy_pass http://localhost:$STUDENT_REACT_PORT; \\
+                    proxy_set_header Host \$host; \\
+                    proxy_set_header X-Real-IP \$remote_addr; \\
+                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for; \\
+                    rewrite ^$STUDENT_PATH(.*)\$ /\$1 break; \\
+                }" "$NGINX_CONFIG_FILE"
+              fi
+          
+              EXPRESS_PATH="${STUDENT_PATH}express/"
+              if ! grep -q "location $EXPRESS_PATH" "$NGINX_CONFIG_FILE"; then
+                echo "Adding Express API proxy for ${{ github.ref_name }}"
+                sudo sed -i "/server {/a \\  
+                location $EXPRESS_PATH { \\
+                    proxy_pass http://localhost:$STUDENT_EXPRESS_PORT/; \\
+                    proxy_http_version 1.1; \\
+                    proxy_set_header Upgrade \$http_upgrade; \\
+                    proxy_set_header Connection 'upgrade'; \\
+                    proxy_set_header Host \$host; \\
+                    proxy_cache_bypass \$http_upgrade; \\
+                }" "$NGINX_CONFIG_FILE"
+              fi
             else
-                echo "Nginx config file does not exist. Creating new file for students..."
-
-                # Create the Nginx config file and add the first student entry inside the server block
-                sudo bash -c "echo 'server {
-                    listen 80;
-                    server_name app.merav.co.in;
-
-                    location $STUDENT_URL {
-                        proxy_pass http://localhost:$STUDENT_PORT;
-                        proxy_set_header Host \$host;
-                        proxy_set_header X-Real-IP \$remote_addr;
-                        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                        rewrite ^$STUDENT_URL(.*)\$ /\$1 break;
-                    }
-                }' > $NGINX_CONFIG_FILE"
+              echo "Creating new Nginx config file for students..."
+              sudo bash -c "echo 'server {
+                  listen 80;
+                  server_name app.merav.co.in;
+          
+                  location $STUDENT_PATH {
+                      proxy_pass http://localhost:$STUDENT_REACT_PORT;
+                      proxy_set_header Host \$host;
+                      proxy_set_header X-Real-IP \$remote_addr;
+                      proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                      rewrite ^$STUDENT_PATH(.*)\$ /\$1 break;
+                  }
+          
+                  location ${STUDENT_PATH}express/ {
+                      proxy_pass http://localhost:$STUDENT_EXPRESS_PORT/;
+                      proxy_http_version 1.1;
+                      proxy_set_header Upgrade \$http_upgrade;
+                      proxy_set_header Connection 'upgrade';
+                      proxy_set_header Host \$host;
+                      proxy_cache_bypass \$http_upgrade;
+                  }
+              }' > $NGINX_CONFIG_FILE"
             fi
-
-            # Link to enabled sites and restart Nginx
+          
             sudo ln -sf /etc/nginx/sites-available/students /etc/nginx/sites-enabled/
             sudo nginx -t
             sudo systemctl restart nginx
