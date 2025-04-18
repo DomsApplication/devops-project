@@ -35,6 +35,7 @@ jobs:
           echo github.event.pull_request.merged: ${{ github.event.pull_request.merged }}
           echo OPENPROJECT_API_URL: ${{ secrets.OPENPROJECT_API_URL }}
           echo OPENPROJECT_API_TOKEN: ${{ secrets.OPENPROJECT_API_TOKEN }}
+          
           echo PR_TITLE: $PR_TITLE
           echo PR_BODY: $PR_BODY
           echo PR_URL: $PR_URL
