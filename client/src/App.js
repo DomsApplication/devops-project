@@ -8,7 +8,7 @@ function App() {
 
   const callApi = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/express/`);
+      const res = await fetch(`${API_BASE_URL}/express/api`);
       const text = await res.text();
       setResponse(text);
     } catch (error) {
