@@ -60,7 +60,7 @@ jobs:
           echo "MESSAGE=$MESSAGE" >> $GITHUB_ENV
 
       - name: POST comment to OpenProject for work package Id
-        if: github.event.pull_request.merged == true || github.event.action == 'opened'
+        if: github.event.action == 'opened'
         run: |
           # refer this link for open projet status : https://www.openproject.org/docs/api/endpoints/work-packages/  : [Comment work package] /api/v3/work_packages/{id}/activities
           curl -X POST "${{ secrets.OPENPROJECT_API_URL }}/api/v3/work_packages/$WP_ID/activities" \
@@ -68,12 +68,28 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{\"comment\": {\"raw\": \"$MESSAGE\"}}"
 
+      - name: Determine status code
+        run: |
+          if [[ "${{ github.event.action }}" == "opened" ]]; then
+            echo "WP_STATUS_ID=1" >> $GITHUB_ENV   # New
+          elif [[ "${{ github.event.action }}" == "edited" ]]; then
+            echo "WP_STATUS_ID=2" >> $GITHUB_ENV   # In Progress
+          elif [[ "${{ github.event.action }}" == "closed" ]]; then
+            if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
+              echo "WP_STATUS_ID=3" >> $GITHUB_ENV # Resolved
+            else
+              echo "WP_STATUS_ID=6" >> $GITHUB_ENV # Rejected
+            fi
+          else
+            echo "No status change required."
+          fi
+
       - name: PATCH status to OpenProject for work package Id
-        if: github.event.pull_request.merged == true || github.event.action == 'opened'
+        if: env.WP_STATUS_ID != ''
         run: |
           # refer this link for open projet status : https://www.openproject.org/docs/api/endpoints/statuses/ :  [Update a work package]  /api/v3/work_packages/{id}
           curl -X PATCH "${{ secrets.OPENPROJECT_API_URL }}/api/v3/work_packages/$WP_ID" \
             -H "Authorization: Bearer ${{ secrets.OPENPROJECT_API_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '{"_links": { "status": { "href": "/api/v3/statuses/1", "title": "New" }}}'
+            -d '{"_links": { "status": { "href": "/api/v3/statuses/$WP_STATUS_ID", "title": "New" }}}'
           # 1 -> New | 3 -> Resolved | 4 -> Feedback | 5 -> Closed | 6 -> Rejected | 2 -> In Progress  
