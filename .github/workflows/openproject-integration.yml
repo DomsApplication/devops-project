@@ -33,6 +33,7 @@ jobs:
           echo "git_hash: $GITHUB_SHA"
           echo git_branch: ${GITHUB_REF#refs/heads/}
           echo github.event.pull_request.merged: ${{ github.event.pull_request.merged }}
+
           echo OPENPROJECT_API_URL: ${{ secrets.OPENPROJECT_API_URL }}
           echo OPENPROJECT_API_TOKEN: ${{ secrets.OPENPROJECT_API_TOKEN }}
           echo PR_TITLE: $PR_TITLE
