@@ -183,15 +183,15 @@ jobs:
                 EXPRESS_PATH="${STUDENT_URL}express/"
                 if ! grep -q "location $EXPRESS_PATH" "$NGINX_CONFIG_FILE"; then
                   echo "Adding Express API proxy for ${{ github.ref_name }}"
-                  sudo sed -i "/server {/a \\  
-                  location $EXPRESS_PATH { \\
-                      proxy_pass http://localhost:$EXPRESS_PORT/; \\
-                      proxy_http_version 1.1; \\
-                      proxy_set_header Upgrade \$http_upgrade; \\
-                      proxy_set_header Connection 'upgrade'; \\
-                      proxy_set_header Host \$host; \\
-                      proxy_cache_bypass \$http_upgrade; \\
-                  }" "$NGINX_CONFIG_FILE"
+                  sudo sed -i "/server {/a \\
+            location $EXPRESS_PATH { \\
+                proxy_pass http://localhost:$EXPRESS_PORT/; \\
+                proxy_http_version 1.1; \\
+                proxy_set_header Upgrade \$http_upgrade; \\
+                proxy_set_header Connection 'upgrade'; \\
+                proxy_set_header Host \$host; \\
+                proxy_cache_bypass \$http_upgrade; \\
+            }" "$NGINX_CONFIG_FILE"
                 fi
             else
                 echo "Nginx config file does not exist. Creating new file for students..."
