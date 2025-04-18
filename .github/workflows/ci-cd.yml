@@ -131,7 +131,7 @@ jobs:
 
             # Create .env file for the server
             echo "PORT=$EXPRESS_PORT" > /home/${{ github.ref_name }}/server/.env
-            echo "ALLOWED_ORIGINS=http://${{ secrets.DROPLET_IP }}:$REACT_PORT,http://165.232.190.41:$REACT_PORT" >> /home/${{ github.ref_name }}/server/.env
+            echo "ALLOWED_ORIGINS=http://${{ secrets.DROPLET_IP }}:$REACT_PORT,http://app.merav.co.in" >> /home/${{ github.ref_name }}/server/.env
 
             # Create .env file for the client
             echo "REACT_APP_API_URL=http://${{ secrets.DROPLET_IP }}:$EXPRESS_PORT" > /home/${{ github.ref_name }}/client/.env
@@ -152,3 +152,54 @@ jobs:
 
             pm2 save
             pm2 startup
+            echo "****************** Updating Nginx Configuration for Student URLs *****************"
+
+            # Define the file location
+            sudo apt update && sudo apt install -y nginx
+            NGINX_CONFIG_FILE="/etc/nginx/sites-available/students"
+            STUDENT_URL="/${{ github.ref_name }}/"
+            STUDENT_PORT=$REACT_PORT
+
+            # Check if the Nginx config file exists
+            if [ -f "$NGINX_CONFIG_FILE" ]; then
+                echo "Nginx config file exists. Checking if entry for ${{ github.ref_name }} already exists..."
+
+                # Check if the entry for the current student already exists
+                if ! grep -q "location $STUDENT_URL" "$NGINX_CONFIG_FILE"; then
+                    echo "No existing  entry for ${{ github.ref_name }}. Adding new entry for this student..."
+
+                    # Add the new student URL mapping to the Nginx configuration inside the server block
+                    sudo sed -i "/server {/a \\
+            location $STUDENT_URL { \\
+                proxy_pass http://localhost:$STUDENT_PORT; \\
+                proxy_set_header Host \$host; \\
+                proxy_set_header X-Real-IP \$remote_addr; \\
+                proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for; \\
+                rewrite ^$STUDENT_URL(.*)\$ /\$1 break; \\
+            }" "$NGINX_CONFIG_FILE"
+                else
+                    echo "Entry  for ${{ github.ref_name }} already exists. Skipping update."
+                fi
+            else
+                echo "Nginx config file does not exist. Creating new file for students..."
+
+                # Create the Nginx config file and add the first student entry inside the server block
+                sudo bash -c "echo 'server {
+                    listen 80;
+                    server_name app.merav.co.in;
+
+                    location $STUDENT_URL {
+                        proxy_pass http://localhost:$STUDENT_PORT;
+                        proxy_set_header Host \$host;
+                        proxy_set_header X-Real-IP \$remote_addr;
+                        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                        rewrite ^$STUDENT_URL(.*)\$ /\$1 break;
+                    }
+                }' > $NGINX_CONFIG_FILE"
+            fi
+
+            # Link to enabled sites and restart Nginx
+            sudo ln -sf /etc/nginx/sites-available/students /etc/nginx/sites-enabled/
+            sudo nginx -t
+            sudo systemctl restart nginx
+            echo "✅ Nginx Configuration Updated and Restarted Successfully"
