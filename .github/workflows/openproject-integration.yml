@@ -1,0 +1,81 @@
+name: Update OpenProject Story
+
+on:
+  pull_request:
+    types: [opened, closed, edited]
+
+permissions:
+  contents: write
+
+jobs:
+  update-openproject:
+    name: Update Openproject
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+      packages: read
+    
+    steps:
+      - name: Debug Information
+        run: |
+          echo github actor: ${{ github.actor }}
+          echo github actor id: ${{ github.actor_id }}
+          echo branch or tag: ${{ github.ref_type }}
+          echo branch or tag name: ${{ github.ref_name }}
+          echo "git_hash: $GITHUB_SHA"
+          echo git_branch: ${GITHUB_REF#refs/heads/}
+          echo github.event.pull_request.merged: ${{ github.event.pull_request.merged }}
+
+          echo OPENPROJECT_API_URL: ${{ secrets.OPENPROJECT_API_URL }}
+          echo OPENPROJECT_API_TOKEN: ${{ secrets.OPENPROJECT_API_TOKEN }}
+          echo PR_TITLE: ${{ github.event.pull_request.title }}
+          echo PR_TITLE: ${{ github.event.pull_request.title }}
+          echo PR_BODY: ${{ github.event.pull_request.body }}
+          echo PR_URL: ${{ github.event.pull_request.html_url }}
+          echo PR_USER: ${{ github.event.pull_request.user.login }}
+          echo PR_ACTION: ${{ github.event.action }}
+
+      - name: Parsing OpenProject ID
+        run: |
+          # Combine title and body for search
+          CONTENT="$PR_TITLE $PR_BODY"
+          echo "CONTENT=$CONTENT" >> $GITHUB_ENV
+
+          # Extract Work Package ID using regex for #1234
+          if [[ $CONTENT =~ \#([0-9]+) ]]; then
+            WP_ID="${BASH_REMATCH[1]}"
+            echo "Found OpenProject Work Package ID: $WP_ID"
+            echo "WP_ID=$WP_ID" >> $GITHUB_ENV
+
+      - name: Prepare comment
+        run: |
+          if [[ "$PR_ACTION" == "opened" ]]; then
+            MESSAGE="Pull Request [$PR_TITLE]($PR_URL) was opened by @$PR_USER."
+          elif [[ "$GITHUB_EVENT_NAME" == "pull_request" && $GITHUB_EVENT_PULL_REQUEST_MERGED == "true" ]]; then
+            MESSAGE="Pull Request [$PR_TITLE]($PR_URL) was merged by @$PR_USER."
+          else
+            MESSAGE="Pull Request [$PR_TITLE]($PR_URL) was updated by @$PR_USER."
+          fi
+          echo "Message is $MESSAGE"
+          echo "MESSAGE=$MESSAGE" >> $GITHUB_ENV
+
+      - name: POST comment to OpenProject for work package Id
+        if: github.event.pull_request.merged == true || github.event.action == 'opened'
+        run: |
+          # refer this link for open projet status : https://www.openproject.org/docs/api/endpoints/work-packages/  : [Comment work package] /api/v3/work_packages/{id}/activities
+          curl -X POST "${{ secrets.OPENPROJECT_API_URL }}/api/v3/work_packages/$WP_ID/activities" \
+            -H "Authorization: Bearer ${{ secrets.OPENPROJECT_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"comment\": {\"raw\": \"$MESSAGE\"}}"
+
+      - name: PATCH status to OpenProject for work package Id
+        if: github.event.pull_request.merged == true || github.event.action == 'opened'
+        run: |
+          # refer this link for open projet status : https://www.openproject.org/docs/api/endpoints/statuses/ :  [Update a work package]  /api/v3/work_packages/{id}
+          curl -X PATCH "${{ secrets.OPENPROJECT_API_URL }}/api/v3/work_packages/$WP_ID" \
+            -H "Authorization: Bearer ${{ secrets.OPENPROJECT_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"_links": { "status": { "href": "/api/v3/statuses/1", "title": "New" }}}'
+          # 1 -> New | 3 -> Resolved | 4 -> Feedback | 5 -> Closed | 6 -> Rejected | 2 -> In Progress  
