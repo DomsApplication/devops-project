@@ -69,11 +69,11 @@ jobs:
           PR_ACTION: ${{ github.event.action }}
         run: |
           if [[ "$PR_ACTION" == "opened" ]]; then
-            MESSAGE="Pull Request [$PR_TITLE]($PR_URL) was opened by @$PR_USER."
+            MESSAGE="Pull Request \"$TITLE\":$PR_URL was opened by @$PR_USER."
           elif [[ "$GITHUB_EVENT_NAME" == "pull_request" && $GITHUB_EVENT_PULL_REQUEST_MERGED == "true" ]]; then
-            MESSAGE="Pull Request [$PR_TITLE]($PR_URL) was merged by @$PR_USER."
+            MESSAGE="Pull Request \"$TITLE\":$PR_URL was merged by @$PR_USER."
           else
-            MESSAGE="Pull Request [$PR_TITLE]($PR_URL) was updated by @$PR_USER."
+            MESSAGE="Pull Request \"$TITLE\":$PR_URL was updated by @$PR_USER."
           fi
           echo "Message is $MESSAGE"
           echo "MESSAGE=$MESSAGE" >> $GITHUB_ENV
