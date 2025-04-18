@@ -137,6 +137,6 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
                   "_links": { "status": { "href": "/api/v3/statuses/$WP_STATUS_ID" } },
-                  "lockVersion": $LOCK_VERSION
+                  "lockVersion": "$LOCK_VERSION"
                }'
           # 1 -> New | 3 -> Resolved | 4 -> Feedback | 5 -> Closed | 6 -> Rejected | 2 -> In Progress  
