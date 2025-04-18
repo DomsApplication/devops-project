@@ -58,6 +58,7 @@ jobs:
             WP_ID="${BASH_REMATCH[1]}"
             echo "Found OpenProject Work Package ID: $WP_ID"
             echo "WP_ID=$WP_ID" >> $GITHUB_ENV
+          fi
 
       - name: Prepare comment
         env:
