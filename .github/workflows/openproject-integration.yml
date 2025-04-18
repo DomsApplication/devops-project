@@ -19,6 +19,12 @@ jobs:
     
     steps:
       - name: Debug Information
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_USER: ${{ github.event.pull_request.user.login }}
+          PR_ACTION: ${{ github.event.action }}
         run: |
           echo github actor: ${{ github.actor }}
           echo github actor id: ${{ github.actor_id }}
@@ -27,15 +33,22 @@ jobs:
           echo "git_hash: $GITHUB_SHA"
           echo git_branch: ${GITHUB_REF#refs/heads/}
           echo github.event.pull_request.merged: ${{ github.event.pull_request.merged }}
+
           echo OPENPROJECT_API_URL: ${{ secrets.OPENPROJECT_API_URL }}
           echo OPENPROJECT_API_TOKEN: ${{ secrets.OPENPROJECT_API_TOKEN }}
-          echo PR_TITLE: ${{ github.event.pull_request.title }}
-          echo PR_BODY: ${{ github.event.pull_request.body }}
-          echo PR_URL: ${{ github.event.pull_request.html_url }}
-          echo PR_USER: ${{ github.event.pull_request.user.login }}
-          echo PR_ACTION: ${{ github.event.action }}
+          echo PR_TITLE: $PR_TITLE
+          echo PR_BODY: $PR_BODY
+          echo PR_URL: $PR_URL
+          echo PR_USER: $PR_USER
+          echo PR_ACTION: $PR_ACTION
 
       - name: Parsing OpenProject ID
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_USER: ${{ github.event.pull_request.user.login }}
+          PR_ACTION: ${{ github.event.action }}
         run: |
           # Combine title and body for search
           CONTENT="$PR_TITLE $PR_BODY"
@@ -48,6 +61,12 @@ jobs:
             echo "WP_ID=$WP_ID" >> $GITHUB_ENV
 
       - name: Prepare comment
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_USER: ${{ github.event.pull_request.user.login }}
+          PR_ACTION: ${{ github.event.action }}
         run: |
           if [[ "$PR_ACTION" == "opened" ]]; then
             MESSAGE="Pull Request [$PR_TITLE]($PR_URL) was opened by @$PR_USER."
@@ -60,6 +79,12 @@ jobs:
           echo "MESSAGE=$MESSAGE" >> $GITHUB_ENV
 
       - name: POST comment to OpenProject for work package Id
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_USER: ${{ github.event.pull_request.user.login }}
+          PR_ACTION: ${{ github.event.action }}
         if: github.event.action == 'opened'
         run: |
           # refer this link for open projet status : https://www.openproject.org/docs/api/endpoints/work-packages/  : [Comment work package] /api/v3/work_packages/{id}/activities
@@ -69,6 +94,12 @@ jobs:
             -d "{\"comment\": {\"raw\": \"$MESSAGE\"}}"
 
       - name: Determine status code
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_USER: ${{ github.event.pull_request.user.login }}
+          PR_ACTION: ${{ github.event.action }}
         run: |
           if [[ "${{ github.event.action }}" == "opened" ]]; then
             echo "WP_STATUS_ID=1" >> $GITHUB_ENV   # New
@@ -85,6 +116,12 @@ jobs:
           fi
 
       - name: PATCH status to OpenProject for work package Id
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_USER: ${{ github.event.pull_request.user.login }}
+          PR_ACTION: ${{ github.event.action }}
         if: env.WP_STATUS_ID != ''
         run: |
           # refer this link for open projet status : https://www.openproject.org/docs/api/endpoints/statuses/ :  [Update a work package]  /api/v3/work_packages/{id}
