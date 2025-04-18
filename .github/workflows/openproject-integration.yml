@@ -125,8 +125,19 @@ jobs:
         if: env.WP_STATUS_ID != ''
         run: |
           # refer this link for open projet status : https://www.openproject.org/docs/api/endpoints/statuses/ :  [Update a work package]  /api/v3/work_packages/{id}
+
+          # Get the current lockVersion
+          WP_DETAILS=$(curl -s -u "apikey:${{ secrets.OPENPROJECT_API_TOKEN }}" \
+            "${{ secrets.OPENPROJECT_API_URL }}/api/v3/work_packages/$WP_ID")
+          LOCK_VERSION=$(echo "$WP_DETAILS" | jq '.lockVersion')
+          echo "Current lockVersion: $LOCK_VERSION"
+
           curl -X PATCH "${{ secrets.OPENPROJECT_API_URL }}/api/v3/work_packages/$WP_ID" \
             -u "apikey:${{ secrets.OPENPROJECT_API_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '{"_links": { "status": { "href": "/api/v3/statuses/$WP_STATUS_ID", "title": "New" }}}'
+            -d '{
+                  "_links": { "status": { "href": "/api/v3/statuses/$WP_STATUS_ID" } },
+                  "lockVersion": $LOCK_VERSION
+               }'
+            -d '{"_links": { "status": { "href": "/api/v3/statuses/$WP_STATUS_ID" }}}'
           # 1 -> New | 3 -> Resolved | 4 -> Feedback | 5 -> Closed | 6 -> Rejected | 2 -> In Progress  
