@@ -55,6 +55,7 @@ jobs:
           OFFSET=$((STUDENT_INDEX % 100))
 
           # Lookup droplet IP
+          cat "$DROPLET_MAP"
           DROPLET_IP=$(grep "^$DROPLET_NAME," "$DROPLET_MAP" | cut -d',' -f2)
           if [ -z "$DROPLET_IP" ]; then
             echo "Droplet $DROPLET_NAME not found in IP mapping."
