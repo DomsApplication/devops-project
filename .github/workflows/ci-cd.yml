@@ -81,7 +81,7 @@ jobs:
           echo git_hash: $(git rev-parse --short "$GITHUB_SHA")
           echo git_branch: ${GITHUB_REF#refs/heads/}
           echo github.event.pull_request.merged: ${{ github.event.pull_request.merged }}
-          echo HOST: ${{ secrets.DROPLET_IP }}
+          echo HOST: ${{ env.DROPLET_IP }}
 
       - name: Ensure target directory exists on remote server
         uses: appleboy/ssh-action@v1.2.1
