@@ -23,10 +23,10 @@ const corsOptions = {
 // Apply CORS middleware
 app.use(cors(corsOptions));
 
-app.get('/express/', (request, response) => {
+app.get('/express/api', (request, response) => {
     response.send(`
         <h1>Status Code: ${response.statusCode}</h1>
-        <h2>Hello World</h2>
+        <h2>Hello World poc</h2>
     `);
 });
 
