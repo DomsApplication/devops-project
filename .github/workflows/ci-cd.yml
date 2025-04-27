@@ -86,7 +86,7 @@ jobs:
       - name: Ensure target directory exists on remote server
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: $DROPLET_IP
+          host: ${{ env.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
@@ -96,7 +96,7 @@ jobs:
       - name: CI - Move frontend source to remote server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: $DROPLET_IP
+          host: ${{ env.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 600s
@@ -108,7 +108,7 @@ jobs:
       - name: CI - Move backend source to remote server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: $DROPLET_IP
+          host: ${{ env.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 600s
@@ -120,7 +120,7 @@ jobs:
       - name: Deploy Application
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: $DROPLET_IP
+          host: ${{ env.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 900s
@@ -170,7 +170,7 @@ jobs:
 
             # Create .env file for the server
             echo "PORT=$EXPRESS_PORT" > /home/${{ github.ref_name }}/server/.env
-            echo "ALLOWED_ORIGINS=http://$DROPLET_IP:$REACT_PORT,http://app.merav.co.in,http://app.merav.co.in/${{ github.ref_name }}" >> /home/${{ github.ref_name }}/server/.env
+            echo "ALLOWED_ORIGINS=http://${{ env.DROPLET_IP }}:$REACT_PORT,http://app.merav.co.in,http://app.merav.co.in/${{ github.ref_name }}" >> /home/${{ github.ref_name }}/server/.env
 
             # Create .env file for the client
             echo "REACT_APP_API_URL=http://app.merav.co.in/${{ github.ref_name }}" > /home/${{ github.ref_name }}/client/.env
