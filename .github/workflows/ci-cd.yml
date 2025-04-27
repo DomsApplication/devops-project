@@ -137,7 +137,7 @@ jobs:
                 # Count all PM2 processes (not just online ones)
                 PROCESS_COUNT=$(pm2 list | grep -cE "(online|stopped|errored)")
 
-                echo "Total PM2 processes (all states): $PROCESS_COUNT"
+                echo "Total \PM2 processes (all states): $PROCESS_COUNT"
 
                 # Ensure PROCESS_COUNT is a valid number
                 if [ -z "$PROCESS_COUNT" ] || [ "$PROCESS_COUNT" -lt 0 ]; then
