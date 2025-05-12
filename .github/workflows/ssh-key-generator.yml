@@ -69,7 +69,7 @@ jobs:
       - name: Set environment in GitHub Secrets
         if: env.SSH_KEY_EXISTS == 'false'
         env:
-          GITHUB_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         run: |
           echo "Display SSH KEY ID: ${{ env.SSH_KEY_ID }}"
           echo -n "${{ env.PRIVATE_KEY }}" | gh secret set SSH_PRIVATE_KEY --repo ${{ github.repository }}

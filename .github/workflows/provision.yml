@@ -123,7 +123,7 @@ jobs:
       - name: Set environment in GitHub Secrets
         if: env.DROPLET_EXISTS == 'false'
         env:
-          GITHUB_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         run: |
           gh api \
           -X PUT \
