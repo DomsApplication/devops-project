@@ -1,4 +1,2 @@
-ganesh,0
-ganesh_poc,102
-ganesh_main,2
-temp,103
+student-main-001,1
+student-main-102,102
