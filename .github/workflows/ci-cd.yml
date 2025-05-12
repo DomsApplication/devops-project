@@ -32,6 +32,45 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
 
+      - name: Assign droplet, ports, and IP address
+        run: |
+          BRANCH_NAME="${GITHUB_REF##*/}"
+
+          # Files
+          STUDENT_MAP="student-index-map.txt"
+          DROPLET_MAP="droplet-ip-map.txt"
+
+          # Lookup student index
+          STUDENT_INDEX=$(grep "^$BRANCH_NAME," "$STUDENT_MAP" | cut -d',' -f2)
+          if [ -z "$STUDENT_INDEX" ]; then
+            echo "Student $BRANCH_NAME not found in mapping."
+            exit 1
+          fi
+
+          # Calculate droplet number
+          DROPLET_NUMBER=$((STUDENT_INDEX / 100 + 1))
+          DROPLET_NAME="droplet-$DROPLET_NUMBER"
+
+          # Calculate ports
+          OFFSET=$((STUDENT_INDEX % 100))
+
+          # Lookup droplet IP
+          cat "$DROPLET_MAP"
+          DROPLET_IP=$(grep "^$DROPLET_NAME," "$DROPLET_MAP" | cut -d',' -f2)
+          if [ -z "$DROPLET_IP" ]; then
+            echo "Droplet $DROPLET_NAME not found in IP mapping."
+            exit 1
+          fi
+
+          echo "Student: $BRANCH_NAME"
+          echo "Student Index: $STUDENT_INDEX"
+          echo "Droplet: $DROPLET_NAME"
+          echo "Droplet IP: $DROPLET_IP"
+
+          # Export for next steps
+          echo "DROPLET_NAME=$DROPLET_NAME" >> "$GITHUB_ENV"
+          echo "DROPLET_IP=$DROPLET_IP" >> "$GITHUB_ENV"
+
       - name: Debug Information
         run: |
           echo environment: ${{ github.event.inputs.environment || 'default' }}
@@ -42,12 +81,12 @@ jobs:
           echo git_hash: $(git rev-parse --short "$GITHUB_SHA")
           echo git_branch: ${GITHUB_REF#refs/heads/}
           echo github.event.pull_request.merged: ${{ github.event.pull_request.merged }}
-          echo HOST: ${{ secrets.DROPLET_IP }}
+          echo HOST: ${{ env.DROPLET_IP }}
 
       - name: Ensure target directory exists on remote server
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: ${{ secrets.DROPLET_IP }}
+          host: ${{ env.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
@@ -57,7 +96,7 @@ jobs:
       - name: CI - Move frontend source to remote server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.DROPLET_IP }}
+          host: ${{ env.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 600s
@@ -69,7 +108,7 @@ jobs:
       - name: CI - Move backend source to remote server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.DROPLET_IP }}
+          host: ${{ env.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 600s
@@ -81,7 +120,7 @@ jobs:
       - name: Deploy Application
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: ${{ secrets.DROPLET_IP }}
+          host: ${{ env.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 900s
@@ -98,7 +137,7 @@ jobs:
                 # Count all PM2 processes (not just online ones)
                 PROCESS_COUNT=$(pm2 list | grep -cE "(online|stopped|errored)")
 
-                echo "Total PM2 processes (all states): $PROCESS_COUNT"
+                echo "Total \PM2 processes (all states): $PROCESS_COUNT"
 
                 # Ensure PROCESS_COUNT is a valid number
                 if [ -z "$PROCESS_COUNT" ] || [ "$PROCESS_COUNT" -lt 0 ]; then
@@ -131,7 +170,7 @@ jobs:
 
             # Create .env file for the server
             echo "PORT=$EXPRESS_PORT" > /home/${{ github.ref_name }}/server/.env
-            echo "ALLOWED_ORIGINS=http://${{ secrets.DROPLET_IP }}:$REACT_PORT,http://app.merav.co.in,http://app.merav.co.in/${{ github.ref_name }}" >> /home/${{ github.ref_name }}/server/.env
+            echo "ALLOWED_ORIGINS=http://${{ env.DROPLET_IP }}:$REACT_PORT,http://app.merav.co.in,http://app.merav.co.in/${{ github.ref_name }}" >> /home/${{ github.ref_name }}/server/.env
 
             # Create .env file for the client
             echo "REACT_APP_API_URL=http://app.merav.co.in/${{ github.ref_name }}" > /home/${{ github.ref_name }}/client/.env
