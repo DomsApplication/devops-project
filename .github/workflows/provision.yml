@@ -129,7 +129,7 @@ jobs:
           -X PUT \
           -H "Accept: application/vnd.github.v3+json" \
           "/repos/${{ github.repository }}/environments/${{ env.DROPLET_NAME }}" 
-          gh variable set $DROPLET_NAME_GEN --repo ${{ github.repository }} --body "${{ env.DROPLET_IP }}"
+          gh variable set ${{ env.DROPLET_NAME }} --repo ${{ github.repository }} --body "${{ env.DROPLET_IP }}"
 
       - name: Wait for SSH Service Initialization
         if: env.DROPLET_EXISTS == 'false'
