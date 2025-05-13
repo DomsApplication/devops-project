@@ -20,60 +20,54 @@ jobs:
   deploy:
     name: Build and Deployment
     runs-on: ubuntu-latest
-    environment: ${{ 'std-pjt-mern-001' }}
+    environment:
     permissions:
       id-token: write
       contents: write
       pull-requests: write
       packages: read
 
-    if: github.event.pull_request.merged != true && github.event.pull_request.closed != true && github.event.pull_request.base.ref != 'main'
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref != 'main'
     steps:
       - name: Check out code
         uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.base.ref }}
 
-      - name: Export BRANCH_NAME
-        run: echo "BRANCH_NAME=${{ github.event.pull_request.head.ref }}" >> "$GITHUB_ENV"
-
       - name: Assign droplet, ports, and IP address
         run: |
-          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          BRANCH_NAME="${{ github.event.pull_request.base.ref }}"
+          STUDENT_INDEX=$(echo "$BRANCH_NAME" | awk -F'-' '{print $NF}')
 
-          # Files
-          STUDENT_MAP="student-index-map.txt"
-          DROPLET_MAP="droplet-ip-map.txt"
-
-          # Lookup student index
-          STUDENT_INDEX=$(grep "^$BRANCH_NAME," "$STUDENT_MAP" | cut -d',' -f2)
-          if [ -z "$STUDENT_INDEX" ]; then
-            echo "Student $BRANCH_NAME not found in mapping."
+          if ! [[ "$STUDENT_INDEX" =~ ^[0-9]+$ ]]; then
+            echo "Invalid branch format. Could not extract student index from: $BRANCH_NAME"
             exit 1
           fi
 
-          # Calculate droplet number
-          DROPLET_NUMBER=$((STUDENT_INDEX / 100 + 1))
-          DROPLET_NAME="droplet-$DROPLET_NUMBER"
-
-          # Calculate ports
-          OFFSET=$((STUDENT_INDEX % 100))
-
-          # Lookup droplet IP
-          cat "$DROPLET_MAP"
-          DROPLET_IP=$(grep "^$DROPLET_NAME," "$DROPLET_MAP" | cut -d',' -f2)
-          if [ -z "$DROPLET_IP" ]; then
-            echo "Droplet $DROPLET_NAME not found in IP mapping."
-            exit 1
-          fi
-
-          echo "Student: $BRANCH_NAME"
           echo "Student Index: $STUDENT_INDEX"
-          echo "Droplet: $DROPLET_NAME"
+
+          DEPLOY_PER_NODE="${{ vars.DEPLOY_PER_NODE }}"
+          if [ -z "$DEPLOY_PER_NODE" ]; then
+            echo "DEPLOY_PER_NODE is not defined in the environment."
+            exit 1
+          fi
+
+          # Compute droplet number
+          DROPLET_NUMBER=$(( (STUDENT_INDEX - 1) / DEPLOY_PER_NODE + 1 ))
+          DROPLET_VAR_NAME="droplet${DROPLET_NUMBER}"
+
+          # Resolve droplet IP from env var like droplet1, droplet2...
+          echo "DROPLET_IP=${{ vars.$DROPLET_VAR_NAME }}" >> $GITHUB_ENV
+
           echo "Droplet IP: $DROPLET_IP"
 
+          if [ -z "$DROPLET_IP" ]; then
+            echo "Droplet IP not found for $DROPLET_VAR_NAME."
+            exit 1
+          fi
+
           # Export for next steps
-          echo "DROPLET_NAME=$DROPLET_NAME" >> "$GITHUB_ENV"
+          echo "DROPLET_NAME=$DROPLET_VAR_NAME" >> "$GITHUB_ENV"
           echo "DROPLET_IP=$DROPLET_IP" >> "$GITHUB_ENV"
 
       - name: Debug Information
