@@ -9,7 +9,7 @@ on:
         type: string
         default: "first-project"
       instance-name:
-        description: "The provided value will append suffix with 'droplet-'"
+        description: "The provided value will append suffix with 'droplet_'"
         required: true
         type: string
         default: "default"
@@ -42,7 +42,7 @@ jobs:
 
       - name: Generate Droplate Unique Name
         run: |
-          DROPLET_NAME_GEN="droplet-${{ inputs.instance-name }}"
+          DROPLET_NAME_GEN="droplet_${{ inputs.instance-name }}"
           echo "DROPLET_NAME=$DROPLET_NAME_GEN" >> $GITHUB_ENV
 
       - name: Get project details
