@@ -9,7 +9,7 @@ on:
         type: string
         default: "first-project"
       instance-name:
-        description: "The provided value will append suffix with 'std-pjt-mern-'"
+        description: "The provided value will append suffix with 'droplet-'"
         required: true
         type: string
         default: "default"
@@ -42,7 +42,7 @@ jobs:
 
       - name: Generate Droplate Unique Name
         run: |
-          DROPLET_NAME_GEN="std-pjt-mern-${{ inputs.instance-name }}"
+          DROPLET_NAME_GEN="droplet-${{ inputs.instance-name }}"
           echo "DROPLET_NAME=$DROPLET_NAME_GEN" >> $GITHUB_ENV
 
       - name: Get project details
@@ -128,8 +128,8 @@ jobs:
           gh api \
           -X PUT \
           -H "Accept: application/vnd.github.v3+json" \
-          "/repos/${{ github.repository }}/environments/${{ env.DROPLET_NAME }}"
-          echo -n "${{ env.DROPLET_IP }}" | gh secret set DROPLET_IP --env ${{ env.DROPLET_NAME }} --repo ${{ github.repository }}
+          "/repos/${{ github.repository }}/environments/${{ env.DROPLET_NAME }}" 
+          gh variable set $DROPLET_NAME_GEN --repo ${{ github.repository }} --body "${{ env.DROPLET_IP }}"
 
       - name: Wait for SSH Service Initialization
         if: env.DROPLET_EXISTS == 'false'
