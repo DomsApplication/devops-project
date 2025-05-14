@@ -125,7 +125,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         run: |
-          echo "Print/1:"
+          echo "Started....."
+          # Retrieve the existing DROPLET_MAP secret
+          EXISTING_SECRET=$(gh secret list --repo "${{ github.repository }}" | grep DROPLET_MAP)
+          echo "Print/1: $EXISTING_SECRET"
 
       - name: Wait for SSH Service Initialization
         if: env.DROPLET_EXISTS == 'false'
