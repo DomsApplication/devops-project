@@ -124,7 +124,7 @@ jobs:
         if: env.DROPLET_EXISTS == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          c: ${{ secrets.DROPLET_MAP }}
+          DROPLET_MAP: ${{ secrets.DROPLET_MAP }}
         run: |
           echo "Print/1: $EXISTING_SECRET"
 
