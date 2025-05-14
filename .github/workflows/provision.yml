@@ -140,6 +140,9 @@ jobs:
           # Update the JSON with the new droplet information
           UPDATED_DROPLET_MAP=$(echo "$DROPLET_MAP" | jq --arg key "${{ env.DROPLET_NAME }}" --arg value "${{ env.DROPLET_IP }}" '.[$key]=$value')
           echo "Print/5: $UPDATED_DROPLET_MAP"
+          # Set the updated JSON as the new DROPLET_MAP secret
+          echo -n "$UPDATED_DROPLET_MAP" | gh secret set DROPLET_MAP --repo ${{ github.repository }}
+          echo "Print/6: END...."
 
 
       - name: Wait for SSH Service Initialization
