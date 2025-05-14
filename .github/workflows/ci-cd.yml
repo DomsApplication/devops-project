@@ -58,7 +58,7 @@ jobs:
           DROPLET_VAR_NAME="droplet${DROPLET_NUMBER}"
 
           # Resolve droplet IP from env var like droplet1, droplet2...
-          echo "DROPLET_IP=${{ vars.$DROPLET_VAR_NAME }}" >> $GITHUB_ENV
+          echo "DROPLET_IP=${{ secrets.$DROPLET_VAR_NAME }}" >> $GITHUB_ENV
 
           echo "Droplet IP: $DROPLET_IP"
 
