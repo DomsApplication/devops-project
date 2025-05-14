@@ -128,7 +128,7 @@ jobs:
           gh api \
           -X PUT \
           -H "Accept: application/vnd.github.v3+json" \
-          "/repos/${{ github.repository }}/environments/${{ env.DROPLET_NAME }}" 
+          "/repos/${{ github.repository }}" 
           #gh variable set ${{ env.DROPLET_NAME }} --repo ${{ github.repository }} --body "${{ env.DROPLET_IP }}"
           echo -n "${{ env.DROPLET_IP }}" | gh secret set ${{ env.DROPLET_NAME }} --repo ${{ github.repository }}
 
