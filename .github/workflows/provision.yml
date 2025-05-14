@@ -126,9 +126,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           DROPLET_MAP: ${{ secrets.DROPLET_MAP }}
         run: |
-          echo "Print/1: $EXISTING_SECRET"
+          echo "Print/1: $DROPLET_MAP"
 
-          if [ -z "$EXISTING_SECRET" ]; then
+          if [ -z "$DROPLET_MAP" ]; then
             # If the secret doesn't exist, initialize an empty JSON object
             DROPLET_MAP="{}"
             echo "Print/1.1: $DROPLET_MAP"
