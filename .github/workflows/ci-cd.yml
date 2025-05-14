@@ -1,4 +1,15 @@
 name: CI/CD Pipeline
+env:
+  droplet1: ${{ secrets.DROPLET1 }}
+  droplet2: ${{ secrets.DROPLET2 }}
+  droplet3: ${{ secrets.DROPLET3 }}
+  droplet4: ${{ secrets.DROPLET4 }}
+  droplet5: ${{ secrets.DROPLET5 }}
+  droplet6: ${{ secrets.DROPLET6 }}
+  droplet7: ${{ secrets.DROPLET7 }}
+  droplet8: ${{ secrets.DROPLET8 }}
+  droplet9: ${{ secrets.DROPLET9 }}
+  droplet10: ${{ secrets.DROPLET10 }}
 
 on:
   workflow_dispatch:
@@ -58,7 +69,7 @@ jobs:
           DROPLET_VAR_NAME="droplet${DROPLET_NUMBER}"
 
           # Resolve droplet IP from env var like droplet1, droplet2...
-          echo "DROPLET_IP=${{ secrets.$DROPLET_VAR_NAME }}" >> $GITHUB_ENV
+          echo "DROPLET_IP=${!DROPLET_VAR_NAME}" >> $GITHUB_ENV
 
           echo "Droplet IP: $DROPLET_IP"
 
