@@ -135,14 +135,13 @@ jobs:
             # If the secret doesn't exist, initialize an empty JSON object
             DROPLET_MAP="{}"
             echo "Print/1.1: $DROPLET_MAP"
-          else
-            # Fetch the existing secret value
-            echo "Print/1.2"
-            DROPLET_MAP=$(gh secret view DROPLET_MAP --repo "${{ github.repository }}" --json value -q .value)
-            echo "Print/1.3"
           fi
           echo "Print/2: $DROPLET_MAP"
-          
+          # Update the JSON with the new droplet information
+          UPDATED_DROPLET_MAP=$(echo "$DROPLET_MAP" | jq --arg key "${{ env.DROPLET_NAME }}" --arg value "${{ env.DROPLET_IP }}" '.[$key]=$value')
+          echo "Print/5: $UPDATED_DROPLET_MAP"
+
+
       - name: Wait for SSH Service Initialization
         if: env.DROPLET_EXISTS == 'false'
         run: |
