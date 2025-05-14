@@ -7,11 +7,6 @@ on:
         description: 'Environment to run the workflow against'
         type: environment
         required: true
-  pull_request:
-    types:
-      - closed
-    branches:
-      - '**'
 
 permissions:
   contents: write
@@ -20,7 +15,6 @@ jobs:
   deploy:
     name: Build and Deployment
     runs-on: ubuntu-latest
-    environment:
     permissions:
       id-token: write
       contents: write
@@ -72,7 +66,7 @@ jobs:
 
       - name: Debug Information
         run: |
-          echo environment: ${{ github.event.inputs.environment || 'default' }}
+          echo environment: ${{ github.event.inputs.environment || '-' }}
           echo github actor: ${{ github.actor }}
           echo github actor id: ${{ github.actor_id }}
           echo branch or tag: ${{ github.ref_type }}
