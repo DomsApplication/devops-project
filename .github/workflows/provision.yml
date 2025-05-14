@@ -125,7 +125,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         run: |
-          echo "${GITHUB_TOKEN}" | gh auth login --with-token
           echo -n "${{ env.DROPLET_IP }}" | gh secret set ${{ env.DROPLET_NAME }} --repo ${{ github.repository }}
 
       - name: Wait for SSH Service Initialization
