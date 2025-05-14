@@ -39,16 +39,16 @@ jobs:
       pull-requests: write
       packages: read
 
-    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref != 'main'
+    if: github.event.pull_request.head.ref != 'main'
     steps:
       - name: Check out code
         uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request.base.ref }}
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Assign droplet, ports, and IP address
         run: |
-          BRANCH_NAME="${{ github.event.pull_request.base.ref }}"
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
           STUDENT_INDEX=$(echo "$BRANCH_NAME" | awk -F'-' '{print $NF}')
 
           if ! [[ "$STUDENT_INDEX" =~ ^[0-9]+$ ]]; then
@@ -69,7 +69,8 @@ jobs:
           DROPLET_VAR_NAME="droplet${DROPLET_NUMBER}"
 
           # Resolve droplet IP from env var like droplet1, droplet2...
-          echo "DROPLET_IP=${!DROPLET_VAR_NAME}" >> $GITHUB_ENV
+          eval DROPLET_IP=\$$DROPLET_VAR_NAME
+          echo "DROPLET_IP=$DROPLET_IP" >> $GITHUB_ENV
 
           echo "Droplet IP: $DROPLET_IP"
 
@@ -88,7 +89,7 @@ jobs:
           echo github actor: ${{ github.actor }}
           echo github actor id: ${{ github.actor_id }}
           echo branch or tag: ${{ github.ref_type }}
-          echo branch or tag name: ${{ github.event.pull_request.base.ref }}
+          echo branch or tag name: ${{ github.event.pull_request.head.ref }}
           echo git_hash: $(git rev-parse --short "$GITHUB_SHA")
           echo git_branch: ${GITHUB_REF#refs/heads/}
           echo github.event.pull_request.merged: ${{ github.event.pull_request.merged }}
@@ -102,7 +103,7 @@ jobs:
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            mkdir -p /home/${{ github.event.pull_request.base.ref }}
+            mkdir -p /home/${{ github.event.pull_request.head.ref }}
 
       # This will copies the frontend code base to the remote server
       - name: CI - Move frontend source to remote server
@@ -114,7 +115,7 @@ jobs:
           timeout: 600s
           overwrite: true
           source: ./client/
-          target: /home/${{ github.event.pull_request.base.ref }}
+          target: /home/${{ github.event.pull_request.head.ref }}
 
       # This will copies the backend code base to the remote server
       - name: CI - Move backend source to remote server
@@ -126,7 +127,7 @@ jobs:
           timeout: 600s
           overwrite: true
           source: ./server/
-          target: /home/${{ github.event.pull_request.base.ref }}
+          target: /home/${{ github.event.pull_request.head.ref }}
 
       # This is for running the commands on the remote server
       - name: Deploy Application
@@ -140,8 +141,8 @@ jobs:
             echo "****************** Checking PM2 Running Processes *****************"
 
             # Check if a PM2 process for the current feature branch exists
-            BACKEND_PM2_ID=$(pm2 id "server-${{ github.event.pull_request.base.ref }}" | sed 's/\[//g' | sed 's/\]//g')
-            FRONTEND_PM2_ID=$(pm2 id "client-${{ github.event.pull_request.base.ref }}" | sed 's/\[//g' | sed 's/\]//g')
+            BACKEND_PM2_ID=$(pm2 id "server-${{ github.event.pull_request.head.ref }}" | sed 's/\[//g' | sed 's/\]//g')
+            FRONTEND_PM2_ID=$(pm2 id "client-${{ github.event.pull_request.head.ref }}" | sed 's/\[//g' | sed 's/\]//g')
 
             if [ -z "$BACKEND_PM2_ID" ] || [ "$BACKEND_PM2_ID" == "[]" ]; then
                 echo "No existing process found for this feature branch. Assigning new ports."
@@ -173,31 +174,31 @@ jobs:
                 # Retrieve existing PORT value from the existing PM2 process
                 EXPRESS_PORT=$(pm2 env "$BACKEND_PM2_ID" | grep "PORT" | sed 's/.*PORT: \([0-9]*\).*/\1/')
                 REACT_PORT=$(pm2 env "$FRONTEND_PM2_ID" | grep "PORT" | sed 's/.*PORT: \([0-9]*\).*/\1/')
-                pm2 delete "server-${{ github.event.pull_request.base.ref }}"
-                pm2 delete "client-${{ github.event.pull_request.base.ref }}"
+                pm2 delete "server-${{ github.event.pull_request.head.ref }}"
+                pm2 delete "client-${{ github.event.pull_request.head.ref }}"
                 echo "Reusing existing Express PORT: $EXPRESS_PORT"
             fi
 
             echo "****************** Creating .env Files *****************"
 
             # Create .env file for the server
-            echo "PORT=$EXPRESS_PORT" > /home/${{ github.event.pull_request.base.ref }}/server/.env
-            echo "ALLOWED_ORIGINS=http://${{ env.DROPLET_IP }}:$REACT_PORT,http://app.merav.co.in,http://app.merav.co.in/${{ github.event.pull_request.base.ref }}" >> /home/${{ github.event.pull_request.base.ref }}/server/.env
+            echo "PORT=$EXPRESS_PORT" > /home/${{ github.event.pull_request.head.ref }}/server/.env
+            echo "ALLOWED_ORIGINS=http://${{ env.DROPLET_IP }}:$REACT_PORT,http://app.merav.co.in,http://app.merav.co.in/${{ github.event.pull_request.head.ref }}" >> /home/${{ github.event.pull_request.head.ref }}/server/.env
 
             # Create .env file for the client
-            echo "REACT_APP_API_URL=http://app.merav.co.in/${{ github.event.pull_request.base.ref }}" > /home/${{ github.event.pull_request.base.ref }}/client/.env
+            echo "REACT_APP_API_URL=http://app.merav.co.in/${{ github.event.pull_request.head.ref }}" > /home/${{ github.event.pull_request.head.ref }}/client/.env
 
             echo "****************** Updating & Installing Dependencies *****************"
-            cd /home/${{ github.event.pull_request.base.ref }}/server
+            cd /home/${{ github.event.pull_request.head.ref }}/server
             npm install
-            PORT=$EXPRESS_PORT pm2 start npm --name "server-${{ github.event.pull_request.base.ref }}" -- start
+            PORT=$EXPRESS_PORT pm2 start npm --name "server-${{ github.event.pull_request.head.ref }}" -- start
 
-            cd /home/${{ github.event.pull_request.base.ref }}/client
+            cd /home/${{ github.event.pull_request.head.ref }}/client
             export NODE_OPTIONS="--max-old-space-size=1024"
             npm cache clean --force
             npm install
             npm run build  # Build React frontend
-            pm2 serve build/ $REACT_PORT --name "client-${{ github.event.pull_request.base.ref }}" --spa
+            pm2 serve build/ $REACT_PORT --name "client-${{ github.event.pull_request.head.ref }}" --spa
 
             echo "****************** Starting Applications with PM2 *****************"
 
@@ -208,16 +209,16 @@ jobs:
             # Define the file location
             sudo apt update && sudo apt install -y nginx
             NGINX_CONFIG_FILE="/etc/nginx/sites-available/students"
-            STUDENT_URL="/${{ github.event.pull_request.base.ref }}/"
+            STUDENT_URL="/${{ github.event.pull_request.head.ref }}/"
             STUDENT_PORT=$REACT_PORT
 
             # Check if the Nginx config file exists
             if [ -f "$NGINX_CONFIG_FILE" ]; then
-                echo "Nginx config file exists. Checking if entry for ${{ github.event.pull_request.base.ref }} already exists..."
+                echo "Nginx config file exists. Checking if entry for ${{ github.event.pull_request.head.ref }} already exists..."
 
                 # Check if the entry for the current student already exists
                 if ! grep -q "location $STUDENT_URL" "$NGINX_CONFIG_FILE"; then
-                    echo "No existing  entry for ${{ github.event.pull_request.base.ref }}. Adding new entry for this student..."
+                    echo "No existing  entry for ${{ github.event.pull_request.head.ref }}. Adding new entry for this student..."
 
                     # Add the new student URL mapping to the Nginx configuration inside the server block
                     sudo sed -i "/server {/a \\
@@ -229,11 +230,11 @@ jobs:
                 rewrite ^$STUDENT_URL(.*)\$ /\$1 break; \\
             }" "$NGINX_CONFIG_FILE"
                 else
-                    echo "Entry  for ${{ github.event.pull_request.base.ref }} already exists. Skipping update."
+                    echo "Entry  for ${{ github.event.pull_request.head.ref }} already exists. Skipping update."
                 fi
                 EXPRESS_PATH="${STUDENT_URL}express/"
                 if ! grep -q "location $EXPRESS_PATH" "$NGINX_CONFIG_FILE"; then
-                  echo "Adding Express API proxy for ${{ github.event.pull_request.base.ref }}"
+                  echo "Adding Express API proxy for ${{ github.event.pull_request.head.ref }}"
                   sudo sed -i "/server {/a \\
             location $EXPRESS_PATH { \\
                 proxy_pass http://localhost:$EXPRESS_PORT; \\
