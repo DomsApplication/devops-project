@@ -125,7 +125,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         run: |
-          echo -n "${{ env.DROPLET_IP }}" | gh secret set ${{ env.DROPLET_NAME }} --repo ${{ github.repository }}
+          # Retrieve the existing DROPLET_MAP secret
+          EXISTING_SECRET=$(gh secret list --repo "${{ github.repository }}" | grep DROPLET_MAP)
+
+          if [ -z "$EXISTING_SECRET" ]; then
+            # If the secret doesn't exist, initialize an empty JSON object
+            DROPLET_MAP="{}"
+          else
+            # Fetch the existing secret value
+            DROPLET_MAP=$(gh secret view DROPLET_MAP --repo "${{ github.repository }}" --json value -q .value)
+          fi
+
+          # Update the JSON with the new droplet information
+          UPDATED_DROPLET_MAP=$(echo "$DROPLET_MAP" | jq --arg key "${{ env.DROPLET_NAME }}" --arg value "${{ env.DROPLET_IP }}" '.[$key]=$value')
+
+          # Set the updated JSON as the new DROPLET_MAP secret
+          echo -n "$UPDATED_DROPLET_MAP" | gh secret set DROPLET_MAP --repo ${{ github.repository }}
+
+          #echo -n "${{ env.DROPLET_IP }}" | gh secret set ${{ env.DROPLET_NAME }} --repo ${{ github.repository }}
 
       - name: Wait for SSH Service Initialization
         if: env.DROPLET_EXISTS == 'false'
