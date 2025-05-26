@@ -188,7 +188,7 @@ jobs:
             echo "ALLOWED_ORIGINS=http://${{ env.DROPLET_IP }}:$REACT_PORT,http://app.merav.co.in,http://app.merav.co.in/${{ github.event.pull_request.head.ref }}" >> /home/${{ github.event.pull_request.head.ref }}/server/.env
 
             # Create .env file for the client
-            echo "REACT_APP_API_URL=http:${{ env.DROPLET_IP }}/${{ github.event.pull_request.head.ref }}" > /home/${{ github.event.pull_request.head.ref }}/client/.env
+            echo "REACT_APP_API_URL=http://${{ env.DROPLET_IP }}/${{ github.event.pull_request.head.ref }}" > /home/${{ github.event.pull_request.head.ref }}/client/.env
 
             echo "****************** Updating & Installing Dependencies *****************"
             cd /home/${{ github.event.pull_request.head.ref }}/server
