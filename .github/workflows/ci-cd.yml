@@ -260,12 +260,12 @@ jobs:
                         rewrite ^$STUDENT_URL(.*)\$ /\$1 break;
                     }
 
-                    location ${STUDENT_PATH}express/ {
+                    location ${STUDENT_URL}express/ {
                         proxy_pass http://localhost:$EXPRESS_PORT;
-                        proxy_set_header Host \$host; \\
-                        proxy_set_header X-Real-IP \$remote_addr; \\
-                        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for; \\
-                        rewrite ^$STUDENT_URL(.*)\$ /\$1 break; \\
+                        proxy_set_header Host \$host;
+                        proxy_set_header X-Real-IP \$remote_addr;
+                        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                        rewrite ^$STUDENT_URL(.*)\$ /\$1 break;
                     }
                 }' > $NGINX_CONFIG_FILE"
             fi
