@@ -132,6 +132,8 @@ jobs:
       # This is for running the commands on the remote server
       - name: Deploy Application
         uses: appleboy/ssh-action@v1.2.1
+        env:
+            DROPLET_IP: ${{ env.DROPLET_IP }}
         with:
           host: ${{ env.DROPLET_IP }}
           username: root
@@ -186,7 +188,7 @@ jobs:
             echo "ALLOWED_ORIGINS=http://${{ env.DROPLET_IP }}:$REACT_PORT,http://app.merav.co.in,http://app.merav.co.in/${{ github.event.pull_request.head.ref }}" >> /home/${{ github.event.pull_request.head.ref }}/server/.env
 
             # Create .env file for the client
-            echo "REACT_APP_API_URL=http://app.merav.co.in/${{ github.event.pull_request.head.ref }}" > /home/${{ github.event.pull_request.head.ref }}/client/.env
+            echo "REACT_APP_API_URL=http:${{ env.DROPLET_IP }}/${{ github.event.pull_request.head.ref }}" > /home/${{ github.event.pull_request.head.ref }}/client/.env
 
             echo "****************** Updating & Installing Dependencies *****************"
             cd /home/${{ github.event.pull_request.head.ref }}/server
@@ -250,7 +252,7 @@ jobs:
                 # Create the Nginx config file and add the first student entry inside the server block
                 sudo bash -c "echo 'server {
                     listen 80;
-                    server_name app.merav.co.in;
+                    server_name $DROPLET_IP;
 
                     location $STUDENT_URL {
                         proxy_pass http://localhost:$STUDENT_PORT;
