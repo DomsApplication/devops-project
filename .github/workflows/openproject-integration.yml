@@ -2,7 +2,7 @@ name: Update OpenProject Story
 
 on:
    pull_request:
-     types: [opened, closed, edited]
+     types: [closed]
 
 permissions:
   contents: write
@@ -70,7 +70,7 @@ jobs:
           PR_ACTION: ${{ github.event.action }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          if [[ "$PR_ACTION" == "opened" ]]; then
+          if [[ "$PR_ACTION" == "closed" ]]; then
             MESSAGE="Pull Request #$PR_NUMBER  $PR_TITLE ($PR_URL) was opened by @$PR_USER."
           elif [[ "$GITHUB_EVENT_NAME" == "pull_request" && $GITHUB_EVENT_PULL_REQUEST_MERGED == "true" ]]; then
             MESSAGE="Pull Request #$PR_NUMBER  $PR_TITLE ($PR_URL) was merged by @$PR_USER."
@@ -87,7 +87,7 @@ jobs:
           PR_URL: ${{ github.event.pull_request.html_url }}
           PR_USER: ${{ github.event.pull_request.user.login }}
           PR_ACTION: ${{ github.event.action }}
-        if: github.event.action == 'opened'
+        if: github.event.action == 'closed'
         run: |
           # refer this link for open projet status : https://www.openproject.org/docs/api/endpoints/work-packages/  : [Comment work package] /api/v3/work_packages/{id}/activities
           curl -X POST "${{ secrets.OPENPROJECT_API_URL }}/api/v3/work_packages/$WP_ID/activities" \
