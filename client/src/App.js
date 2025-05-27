@@ -18,7 +18,7 @@ function App() {
 
   return (
     <div>
-      <h1>Minimal React App Updated1</h1>
+      <h1>Minimal React App Updated</h1>
       <button onClick={callApi}>Call API</button>
       <div dangerouslySetInnerHTML={{ __html: response }} />
     </div>
