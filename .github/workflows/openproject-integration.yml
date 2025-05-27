@@ -114,7 +114,7 @@ jobs:
               echo "WP_STATUS_ID=6" >> $GITHUB_ENV # Rejected
             fi
           else
-            echo "No status change required. "
+            echo "No status change required."
           fi
 
       - name: PATCH status to OpenProject for work package Id
