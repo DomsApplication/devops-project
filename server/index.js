@@ -26,7 +26,7 @@ app.use(cors(corsOptions));
 app.get('/express/api', (request, response) => {
     response.send(`
         <h1>Status Code: ${response.statusCode}</h1>
-        <h2>Hello Student-15 </h2>
+        <h2>Hello Student-15</h2>
     `);
 });
 
