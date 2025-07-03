@@ -12,7 +12,7 @@ function App() {
       const text = await res.text();
       setResponse(text);
     } catch (error) {
-      setResponse("Error fetching API");
+      setResponse("Error fetching API ");
     }
   };
 
