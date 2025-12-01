@@ -97,7 +97,7 @@ jobs:
 
       # This will creating a directory.
       - name: Ensure target directory exists on remote server
-        uses: appleboy/ssh-action@v1.2.1
+        uses: appleboy/ssh-action@v1.2.4
         with:
           host: ${{ env.DROPLET_IP }}
           username: root
@@ -131,7 +131,7 @@ jobs:
 
       # This is for running the commands on the remote server
       - name: Deploy Application
-        uses: appleboy/ssh-action@v1.2.1
+        uses: appleboy/ssh-action@v1.2.4
         with:
           host: ${{ env.DROPLET_IP }}
           username: root
